@@ -1,0 +1,10 @@
+project_id = "hkrujkgxitjvgptjolwe"
+
+[functions.telegram-bot]
+verify_jwt = false
+
+[functions.track-click]
+verify_jwt = false
+
+[functions.create-lead]
+verify_jwt = false
