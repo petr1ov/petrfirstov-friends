@@ -1,13 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, UserCheck, CreditCard, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, UserCheck, CreditCard, LogOut, Bot, BarChart3 } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Дашборд" },
+  { to: "/bot-users", icon: Bot, label: "Пользователи бота" },
   { to: "/partners", icon: Users, label: "Партнёры" },
   { to: "/leads", icon: UserCheck, label: "Лиды" },
   { to: "/payouts", icon: CreditCard, label: "Выплаты" },
+  { to: "/analytics", icon: BarChart3, label: "Аналитика" },
 ];
 
 const AdminLayout = () => {
@@ -21,10 +23,9 @@ const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside className="w-64 bg-sidebar-background text-sidebar-foreground flex flex-col border-r border-sidebar-border">
         <div className="p-6">
-          <h2 className="text-lg font-bold text-sidebar-primary-foreground">🤝 Партнёрка</h2>
+          <h2 className="text-lg font-bold text-sidebar-primary-foreground">🤝 CRM Партнёрка</h2>
           <p className="text-xs text-sidebar-foreground/60 mt-1">Админ-панель</p>
         </div>
         <nav className="flex-1 px-3 space-y-1">
@@ -53,8 +54,6 @@ const AdminLayout = () => {
           </Button>
         </div>
       </aside>
-
-      {/* Main content */}
       <main className="flex-1 p-6 lg:p-8 overflow-auto">
         <Outlet />
       </main>

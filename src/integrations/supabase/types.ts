@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_conversations: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          telegram_id: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          telegram_id: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          telegram_id?: number
+        }
+        Relationships: []
+      }
+      bot_users: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          goal: string | null
+          id: string
+          last_active_at: string
+          niche: string | null
+          services: string | null
+          source: string | null
+          telegram_id: number
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          goal?: string | null
+          id?: string
+          last_active_at?: string
+          niche?: string | null
+          services?: string | null
+          source?: string | null
+          telegram_id: number
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          goal?: string | null
+          id?: string
+          last_active_at?: string
+          niche?: string | null
+          services?: string | null
+          source?: string | null
+          telegram_id?: number
+          username?: string | null
+        }
+        Relationships: []
+      }
       clicks: {
         Row: {
           id: string
@@ -32,6 +95,45 @@ export type Database = {
           ip?: string | null
           ref_code?: string
           timestamp?: string
+        }
+        Relationships: []
+      }
+      event_offers: {
+        Row: {
+          created_at: string
+          event_code: string
+          id: string
+          sold_count: number
+          tier1_limit: number
+          tier1_price: number
+          tier2_limit: number
+          tier2_price: number
+          tier3_limit: number
+          tier3_price: number
+        }
+        Insert: {
+          created_at?: string
+          event_code: string
+          id?: string
+          sold_count?: number
+          tier1_limit?: number
+          tier1_price?: number
+          tier2_limit?: number
+          tier2_price?: number
+          tier3_limit?: number
+          tier3_price?: number
+        }
+        Update: {
+          created_at?: string
+          event_code?: string
+          id?: string
+          sold_count?: number
+          tier1_limit?: number
+          tier1_price?: number
+          tier2_limit?: number
+          tier2_price?: number
+          tier3_limit?: number
+          tier3_price?: number
         }
         Relationships: []
       }
@@ -126,6 +228,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_actions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          telegram_id: number
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          telegram_id: number
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          telegram_id?: number
+        }
+        Relationships: []
       }
     }
     Views: {

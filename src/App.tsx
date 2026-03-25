@@ -9,6 +9,8 @@ import Dashboard from "@/pages/Dashboard";
 import Partners from "@/pages/Partners";
 import Leads from "@/pages/Leads";
 import Payouts from "@/pages/Payouts";
+import BotUsers from "@/pages/BotUsers";
+import Analytics from "@/pages/Analytics";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 
@@ -39,9 +41,11 @@ const App = () => (
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/bot-users" element={<BotUsers />} />
               <Route path="/partners" element={<Partners />} />
               <Route path="/leads" element={<Leads />} />
               <Route path="/payouts" element={<Payouts />} />
+              <Route path="/analytics" element={<Analytics />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
