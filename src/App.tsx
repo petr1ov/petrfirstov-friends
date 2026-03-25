@@ -13,6 +13,7 @@ import BotUsers from "@/pages/BotUsers";
 import Analytics from "@/pages/Analytics";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
+import MiniApp from "@/pages/MiniApp";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/mini-app" element={<MiniApp />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />

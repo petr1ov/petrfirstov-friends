@@ -57,6 +57,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        miniapp: {
+          DEFAULT: "hsl(var(--miniapp-bg))",
+          foreground: "hsl(var(--miniapp-fg))",
+          muted: "hsl(var(--miniapp-muted))",
+          purple: "hsl(var(--miniapp-purple))",
+          blue: "hsl(var(--miniapp-blue))",
+          neon: "hsl(var(--miniapp-neon))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

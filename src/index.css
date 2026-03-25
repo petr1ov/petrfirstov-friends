@@ -46,6 +46,13 @@
     --success: 160 60% 45%;
     --warning: 40 95% 55%;
     --info: 200 80% 55%;
+
+    --miniapp-bg: 230 25% 7%;
+    --miniapp-fg: 220 15% 93%;
+    --miniapp-muted: 220 10% 50%;
+    --miniapp-purple: 265 85% 65%;
+    --miniapp-blue: 215 90% 60%;
+    --miniapp-neon: 160 80% 55%;
   }
 
   .dark {
