@@ -415,10 +415,10 @@ async function handleEventOffer(
   }
 
   // Increment sold count
-  await supabase.rpc("increment_event_sold" as any, { p_event_code: eventCode }).catch(() => {
-    // Fallback: manual increment
-    supabase.from("event_offers").update({ sold_count: offer.spotsLeft }).eq("event_code", eventCode);
-  });
+  const { error: rpcError } = await supabase
+    .from("event_offers")
+    .update({ sold_count: (offer.soldCount || 0) + 1 })
+    .eq("event_code", eventCode);
 
   // Create lead
   await supabase.from("leads").insert({
