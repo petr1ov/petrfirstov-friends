@@ -11,6 +11,7 @@ import Leads from "@/pages/Leads";
 import Payouts from "@/pages/Payouts";
 import BotUsers from "@/pages/BotUsers";
 import Analytics from "@/pages/Analytics";
+import Broadcasts from "@/pages/Broadcasts";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
