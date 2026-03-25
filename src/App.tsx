@@ -14,6 +14,7 @@ import Analytics from "@/pages/Analytics";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
+import AdminLogin from "@/pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
