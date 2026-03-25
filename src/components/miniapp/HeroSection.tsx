@@ -19,6 +19,19 @@ const HeroSection = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-5"
+        >
+          <img
+            src={petrPhoto}
+            alt="Пётр Фирстов"
+            className="w-28 h-28 rounded-full mx-auto object-cover border-2 border-miniapp-purple/40 shadow-lg shadow-miniapp-purple/20"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-miniapp-purple/10 border border-miniapp-purple/20 text-miniapp-purple text-xs mb-6"
         >
           <Sparkles className="w-3 h-3" />
