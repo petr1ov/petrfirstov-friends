@@ -13,6 +13,7 @@ import BotUsers from "@/pages/BotUsers";
 import Analytics from "@/pages/Analytics";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
+import MiniApp from "@/pages/MiniApp";
 
 const queryClient = new QueryClient();
 
