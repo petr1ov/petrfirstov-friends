@@ -674,6 +674,32 @@ async function handleMaterialRecommend(chatId: number, telegramId: number) {
   );
 }
 
+const ADMIN_TELEGRAM_ID = 189415023;
+
+async function handleAdminCommand(chatId: number, telegramId: number) {
+  if (telegramId !== ADMIN_TELEGRAM_ID) {
+    await sendMessage(chatId, "❌ У вас нет доступа к админ-панели.");
+    return;
+  }
+
+  // Generate one-time token
+  const token = crypto.randomUUID();
+  await supabase.from("admin_login_tokens").insert({
+    token,
+    telegram_id: telegramId,
+  });
+
+  const loginUrl = `https://petrfirstov.lovable.app/admin-login?token=${token}`;
+
+  await sendMessage(chatId, `🔐 <b>Вход в админ-панель</b>\n\nНажмите кнопку ниже для входа.\n⏳ Ссылка действительна 5 минут.`, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔓 Войти в админку", url: loginUrl }],
+      ],
+    },
+  });
+}
+
 // ====== MAIN HANDLER ======
 
 Deno.serve(async (req) => {
