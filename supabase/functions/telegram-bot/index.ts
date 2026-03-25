@@ -760,6 +760,8 @@ Deno.serve(async (req) => {
         const startParam = text.split(" ")[1] || "";
         await trackAction(telegramId, "command:start", { param: startParam });
         await handleStart(chatId, firstName, startParam);
+      } else if (text === "/admin") {
+        await handleAdminCommand(chatId, telegramId);
       } else {
         // Check user state
         const { data: botUser } = await supabase
