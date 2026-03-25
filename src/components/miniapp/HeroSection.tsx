@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Sparkles, MessageSquare } from "lucide-react";
+import petrPhoto from "@/assets/petr-firstov.jpg";
 
 const HeroSection = () => {
   const scrollTo = (id: string) => {
