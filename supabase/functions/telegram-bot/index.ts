@@ -34,13 +34,16 @@ async function answerCallbackQuery(callbackQueryId: string, text?: string) {
 // ====== TRACKING HELPERS ======
 
 async function trackUser(telegramId: number, firstName: string, username?: string, source = "organic") {
-  await supabase.from("bot_users").upsert({
-    telegram_id: telegramId,
-    first_name: firstName,
-    username: username || null,
-    source,
-    last_active_at: new Date().toISOString(),
-  }, { onConflict: "telegram_id" });
+  await supabase.from("bot_users").upsert(
+    {
+      telegram_id: telegramId,
+      first_name: firstName,
+      username: username || null,
+      source,
+      last_active_at: new Date().toISOString(),
+    },
+    { onConflict: "telegram_id" },
+  );
 }
 
 async function trackAction(telegramId: number, action: string, metadata: any = {}) {
@@ -143,11 +146,7 @@ ${nicheContext}${servicesContext}${goalContext}
 // ====== EVENT OFFER LOGIC ======
 
 async function getEventOffer(eventCode: string): Promise<{ price: number; spotsLeft: number; tier: string } | null> {
-  const { data } = await supabase
-    .from("event_offers")
-    .select("*")
-    .eq("event_code", eventCode)
-    .single();
+  const { data } = await supabase.from("event_offers").select("*").eq("event_code", eventCode).single();
 
   if (!data) return null;
 
@@ -155,9 +154,17 @@ async function getEventOffer(eventCode: string): Promise<{ price: number; spotsL
   if (sold < data.tier1_limit) {
     return { price: data.tier1_price, spotsLeft: data.tier1_limit - sold, tier: `Первые ${data.tier1_limit} человек` };
   } else if (sold < data.tier1_limit + data.tier2_limit) {
-    return { price: data.tier2_price, spotsLeft: data.tier1_limit + data.tier2_limit - sold, tier: `Следующие ${data.tier2_limit}` };
+    return {
+      price: data.tier2_price,
+      spotsLeft: data.tier1_limit + data.tier2_limit - sold,
+      tier: `Следующие ${data.tier2_limit}`,
+    };
   } else if (sold < data.tier1_limit + data.tier2_limit + data.tier3_limit) {
-    return { price: data.tier3_price, spotsLeft: data.tier1_limit + data.tier2_limit + data.tier3_limit - sold, tier: `Следующие ${data.tier3_limit}` };
+    return {
+      price: data.tier3_price,
+      spotsLeft: data.tier1_limit + data.tier2_limit + data.tier3_limit - sold,
+      tier: `Следующие ${data.tier3_limit}`,
+    };
   }
   return null; // sold out
 }
@@ -325,9 +332,7 @@ async function handleTryAI(chatId: number) {
 
   await sendMessage(chatId, text, {
     reply_markup: {
-      inline_keyboard: [
-        [{ text: "🔙 Главное меню", callback_data: "start" }],
-      ],
+      inline_keyboard: [[{ text: "🔙 Главное меню", callback_data: "start" }]],
     },
   });
 
@@ -363,11 +368,7 @@ async function handleWantBotcard(chatId: number) {
 
 async function handleLeaveRequest(chatId: number, telegramId: number, firstName: string, username?: string) {
   // Create lead from bot
-  const { data: partner } = await supabase
-    .from("partners")
-    .select("ref_code")
-    .eq("telegram_id", telegramId)
-    .single();
+  const { data: partner } = await supabase.from("partners").select("ref_code").eq("telegram_id", telegramId).single();
 
   await supabase.from("leads").insert({
     ref_code: partner?.ref_code || "direct_bot",
@@ -377,23 +378,39 @@ async function handleLeaveRequest(chatId: number, telegramId: number, firstName:
     status: "new",
   });
 
-  await sendMessage(chatId, `✅ <b>Заявка отправлена!</b>\n\nПётр свяжется с вами в ближайшее время.\n\nА пока можете попробовать AI-ассистента 👇`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
-        [{ text: "🔙 Главное меню", callback_data: "start" }],
-      ],
+  await sendMessage(
+    chatId,
+    `✅ <b>Заявка отправлена!</b>\n\nПётр свяжется с вами в ближайшее время.\n\nА пока можете попробовать AI-ассистента 👇`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
+      },
     },
-  });
+  );
 
   // Notify admin
-  await sendMessage(ADMIN_CHAT_ID, `🆕 <b>Новая заявка из бота</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nTelegram ID: ${telegramId}`);
+  await sendMessage(
+    ADMIN_CHAT_ID,
+    `🆕 <b>Новая заявка из бота</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nTelegram ID: ${telegramId}`,
+  );
 }
 
-async function handleEventOffer(chatId: number, telegramId: number, firstName: string, username: string | undefined, eventCode: string) {
+async function handleEventOffer(
+  chatId: number,
+  telegramId: number,
+  firstName: string,
+  username: string | undefined,
+  eventCode: string,
+) {
   const offer = await getEventOffer(eventCode);
   if (!offer) {
-    await sendMessage(chatId, "⏳ К сожалению, все места по спецпредложению заняты. Но мы можем обсудить индивидуальные условия!\n\nНапишите @petrfirstov");
+    await sendMessage(
+      chatId,
+      "⏳ К сожалению, все места по спецпредложению заняты. Но мы можем обсудить индивидуальные условия!\n\nНапишите @petrfirstov",
+    );
     return;
   }
 
@@ -412,33 +429,36 @@ async function handleEventOffer(chatId: number, telegramId: number, firstName: s
     status: "new",
   });
 
-  await sendMessage(chatId, `🎉 <b>Отлично, ${firstName}!</b>\n\nВы забронировали место по спецпредложению!\n\n💰 Цена: <b>${offer.price.toLocaleString("ru-RU")} ₽</b>\n\nПётр свяжется с вами в ближайшее время для обсуждения деталей.\n\n📩 Или напишите сами: @petrfirstov`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🤖 Попробовать AI пока ждём", callback_data: "try_ai" }],
-        [{ text: "🔙 Главное меню", callback_data: "start" }],
-      ],
+  await sendMessage(
+    chatId,
+    `🎉 <b>Отлично, ${firstName}!</b>\n\nВы забронировали место по спецпредложению!\n\n💰 Цена: <b>${offer.price.toLocaleString("ru-RU")} ₽</b>\n\nПётр свяжется с вами в ближайшее время для обсуждения деталей.\n\n📩 Или напишите сами: @petrfirstov`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🤖 Попробовать AI пока ждём", callback_data: "try_ai" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
+      },
     },
-  });
+  );
 
   // Notify admin
-  await sendMessage(ADMIN_CHAT_ID, `🔥 <b>Новая заявка с мероприятия!</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nСобытие: ${eventCode}\nЦена: ${offer.price} ₽\nУровень: ${offer.tier}`);
+  await sendMessage(
+    ADMIN_CHAT_ID,
+    `🔥 <b>Новая заявка с мероприятия!</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nСобытие: ${eventCode}\nЦена: ${offer.price} ₽\nУровень: ${offer.tier}`,
+  );
 }
 
 // ====== PARTNER PROGRAM (existing) ======
 
 async function handleRegister(chatId: number, telegramId: number, username: string | undefined) {
-  const { data: existing } = await supabase
-    .from("partners")
-    .select("*")
-    .eq("telegram_id", telegramId)
-    .single();
+  const { data: existing } = await supabase.from("partners").select("*").eq("telegram_id", telegramId).single();
 
   if (existing) {
     const text = `✅ Вы уже зарегистрированы!
 
 Ваш реферальный код: <code>${existing.ref_code}</code>
-Ваша ссылка: <code>https://firstov.ai/?ref=${existing.ref_code}</code>`;
+Ваша ссылка: <code>https://PetrFirstovBot/?ref=${existing.ref_code}</code>`;
 
     await sendMessage(chatId, text, {
       reply_markup: {
@@ -463,7 +483,10 @@ async function handleRegistrationName(chatId: number, telegramId: number, userna
   }
 
   // Save name temporarily and ask for traffic source
-  await supabase.from("bot_users").update({ goal: `register_traffic:${name}` }).eq("telegram_id", telegramId);
+  await supabase
+    .from("bot_users")
+    .update({ goal: `register_traffic:${name}` })
+    .eq("telegram_id", telegramId);
 
   await sendMessage(chatId, `👋 Отлично, ${name}!\n\nКак вы планируете приводить клиентов?`, {
     reply_markup: {
@@ -478,7 +501,13 @@ async function handleRegistrationName(chatId: number, telegramId: number, userna
   });
 }
 
-async function completeRegistration(chatId: number, telegramId: number, username: string | undefined, name: string, trafficSource: string) {
+async function completeRegistration(
+  chatId: number,
+  telegramId: number,
+  username: string | undefined,
+  name: string,
+  trafficSource: string,
+) {
   const refCode = `ref_${telegramId}`;
   const sourceMap: Record<string, string> = {
     friends: "Знакомые",
@@ -505,8 +534,10 @@ async function completeRegistration(chatId: number, telegramId: number, username
   // Clear state
   await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
 
-  const link = `https://firstov.ai/?ref=${refCode}`;
-  await sendMessage(chatId, `🎉 <b>Регистрация завершена!</b>
+  const link = `https://PetrFirstovBot/?ref=${refCode}`;
+  await sendMessage(
+    chatId,
+    `🎉 <b>Регистрация завершена!</b>
 
 Ваш реферальный код: <code>${refCode}</code>
 
@@ -515,32 +546,31 @@ async function completeRegistration(chatId: number, telegramId: number, username
 
 💰 Вознаграждение: <b>10–20%</b> с каждого проекта
 
-Делитесь ссылкой — когда клиент оставит заявку, вы получите вознаграждение!`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "📊 Моя статистика", callback_data: "stats" }],
-        [{ text: "📦 Материалы", callback_data: "materials" }],
-        [{ text: "🔙 Главное меню", callback_data: "start" }],
-      ],
+Делитесь ссылкой — когда клиент оставит заявку, вы получите вознаграждение!`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📊 Моя статистика", callback_data: "stats" }],
+          [{ text: "📦 Материалы", callback_data: "materials" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
+      },
     },
-  });
+  );
 
-  await sendMessage(ADMIN_CHAT_ID, `🆕 <b>Новый партнёр</b>\n\nИмя: ${name}\nUsername: @${username || "не указан"}\nИсточник: ${sourceMap[trafficSource] || trafficSource}\nКод: ${refCode}`);
+  await sendMessage(
+    ADMIN_CHAT_ID,
+    `🆕 <b>Новый партнёр</b>\n\nИмя: ${name}\nUsername: @${username || "не указан"}\nИсточник: ${sourceMap[trafficSource] || trafficSource}\nКод: ${refCode}`,
+  );
 }
 
 async function handleStats(chatId: number, telegramId: number) {
-  const { data: partner } = await supabase
-    .from("partners")
-    .select("*")
-    .eq("telegram_id", telegramId)
-    .single();
+  const { data: partner } = await supabase.from("partners").select("*").eq("telegram_id", telegramId).single();
 
   if (!partner) {
     await sendMessage(chatId, "❌ Вы ещё не зарегистрированы как партнёр.", {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: "🚀 Стать партнёром", callback_data: "register" }],
-        ],
+        inline_keyboard: [[{ text: "🚀 Стать партнёром", callback_data: "register" }]],
       },
     });
     return;
@@ -549,27 +579,35 @@ async function handleStats(chatId: number, telegramId: number) {
   const [clicks, leads, clients, payouts] = await Promise.all([
     supabase.from("clicks").select("*", { count: "exact", head: true }).eq("ref_code", partner.ref_code),
     supabase.from("leads").select("*", { count: "exact", head: true }).eq("ref_code", partner.ref_code),
-    supabase.from("leads").select("*", { count: "exact", head: true }).eq("ref_code", partner.ref_code).eq("status", "client"),
+    supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .eq("ref_code", partner.ref_code)
+      .eq("status", "client"),
     supabase.from("payouts").select("amount").eq("partner_id", partner.id).eq("status", "paid"),
   ]);
 
   const totalIncome = payouts.data?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
 
-  await sendMessage(chatId, `📊 <b>Ваша статистика</b>
+  await sendMessage(
+    chatId,
+    `📊 <b>Ваша статистика</b>
 
-🔗 Ссылка: <code>https://firstov.ai/?ref=${partner.ref_code}</code>
+🔗 Ссылка: <code>https://PetrFirstovBot/?ref=${partner.ref_code}</code>
 
 👁 Переходы: <b>${clicks.count || 0}</b>
 📋 Лиды: <b>${leads.count || 0}</b>
 ✅ Клиенты: <b>${clients.count || 0}</b>
-💰 Доход: <b>${totalIncome.toLocaleString("ru-RU")} ₽</b>`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "📦 Материалы", callback_data: "materials" }],
-        [{ text: "🔙 Главное меню", callback_data: "start" }],
-      ],
+💰 Доход: <b>${totalIncome.toLocaleString("ru-RU")} ₽</b>`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📦 Материалы", callback_data: "materials" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
+      },
     },
-  });
+  );
 }
 
 async function handleMaterials(chatId: number) {
@@ -587,7 +625,9 @@ async function handleMaterials(chatId: number) {
 }
 
 async function handleMaterialServices(chatId: number) {
-  await sendMessage(chatId, `📋 <b>Описание услуг</b>
+  await sendMessage(
+    chatId,
+    `📋 <b>Описание услуг</b>
 
 Пётр Фирстов — разработка цифровых продуктов:
 
@@ -599,31 +639,33 @@ async function handleMaterialServices(chatId: number) {
 📱 <b>Ботовизитка</b> — от 10 000 ₽
 🤖 <b>AI-бот</b> — от 15 000 ₽
 🎙 <b>Голосовой бот</b> — от 20 000 ₽/мес
-📲 <b>Мини-приложение</b> — от 30 000 ₽`, {
-    reply_markup: {
-      inline_keyboard: [[{ text: "🔙 Материалы", callback_data: "materials" }]],
+📲 <b>Мини-приложение</b> — от 30 000 ₽`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔙 Материалы", callback_data: "materials" }]],
+      },
     },
-  });
+  );
 }
 
 async function handleMaterialRecommend(chatId: number, telegramId: number) {
-  const { data: partner } = await supabase
-    .from("partners")
-    .select("ref_code")
-    .eq("telegram_id", telegramId)
-    .single();
+  const { data: partner } = await supabase.from("partners").select("ref_code").eq("telegram_id", telegramId).single();
 
-  const link = partner ? `https://firstov.ai/?ref=${partner.ref_code}` : "https://petrfirstov.ru";
+  const link = partner ? `https://PetrFirstovBot/?ref=${partner.ref_code}` : "https://petrfirstov.ru";
 
-  await sendMessage(chatId, `✍️ <b>Текст для рекомендации</b>
+  await sendMessage(
+    chatId,
+    `✍️ <b>Текст для рекомендации</b>
 
 Скопируйте и отправьте:
 
-<i>Привет! Если тебе нужен Telegram-бот, сайт или AI-ассистент — рекомендую Петра Фирстова. Делает качественно, быстро и с AI. Вот ссылка: ${link}</i>`, {
-    reply_markup: {
-      inline_keyboard: [[{ text: "🔙 Материалы", callback_data: "materials" }]],
+<i>Привет! Если тебе нужен Telegram-бот, сайт или AI-ассистент — рекомендую Петра Фирстова. Делает качественно, быстро и с AI. Вот ссылка: ${link}</i>`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔙 Материалы", callback_data: "materials" }]],
+      },
     },
-  });
+  );
 }
 
 // ====== MAIN HANDLER ======

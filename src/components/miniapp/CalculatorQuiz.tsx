@@ -122,7 +122,9 @@ const CalculatorQuiz = () => {
                   ))}
                 </div>
 
-                <p className="text-xs text-miniapp-muted mb-1">Вопрос {step + 1} из {questions.length}</p>
+                <p className="text-xs text-miniapp-muted mb-1">
+                  Вопрос {step + 1} из {questions.length}
+                </p>
                 <p className="font-semibold mb-4">{questions[step].q}</p>
 
                 <div className="space-y-2">
@@ -142,7 +144,10 @@ const CalculatorQuiz = () => {
                 </div>
 
                 {step > 0 && (
-                  <button onClick={() => setStep(step - 1)} className="mt-4 flex items-center gap-1 text-xs text-miniapp-muted hover:text-miniapp-foreground transition-colors">
+                  <button
+                    onClick={() => setStep(step - 1)}
+                    className="mt-4 flex items-center gap-1 text-xs text-miniapp-muted hover:text-miniapp-foreground transition-colors"
+                  >
                     <ArrowLeft className="w-3 h-3" /> Назад
                   </button>
                 )}
@@ -165,7 +170,7 @@ const CalculatorQuiz = () => {
 
                 <div className="space-y-2">
                   <a
-                    href="https://t.me/petrfirstov"
+                    href="https://t.me/PetrFirstovBot"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full py-3 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm text-center shadow-lg shadow-miniapp-purple/25"

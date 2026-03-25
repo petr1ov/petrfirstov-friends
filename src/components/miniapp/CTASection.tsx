@@ -33,8 +33,8 @@ const CTASection = () => (
 
           <p className="text-xs text-miniapp-muted mt-4">
             или напишите{" "}
-            <a href="https://t.me/petrfirstov" className="text-miniapp-purple hover:underline">
-              @petrfirstov
+            <a href="https://t.me/PetrFirstovBot" className="text-miniapp-purple hover:underline">
+              @PetrFirstovBot
             </a>
           </p>
         </div>
