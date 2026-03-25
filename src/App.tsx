@@ -11,6 +11,7 @@ import Leads from "@/pages/Leads";
 import Payouts from "@/pages/Payouts";
 import BotUsers from "@/pages/BotUsers";
 import Analytics from "@/pages/Analytics";
+import Broadcasts from "@/pages/Broadcasts";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/leads" element={<Leads />} />
               <Route path="/payouts" element={<Payouts />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/broadcasts" element={<Broadcasts />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

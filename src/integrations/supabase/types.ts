@@ -101,6 +101,98 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_recipients: {
+        Row: {
+          broadcast_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          personalized_message: string | null
+          sent_at: string | null
+          status: string
+          telegram_id: number
+        }
+        Insert: {
+          broadcast_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          personalized_message?: string | null
+          sent_at?: string | null
+          status?: string
+          telegram_id: number
+        }
+        Update: {
+          broadcast_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          personalized_message?: string | null
+          sent_at?: string | null
+          status?: string
+          telegram_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_recipients_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcasts: {
+        Row: {
+          ai_goal: string | null
+          ai_tone: string | null
+          buttons: Json | null
+          completed_at: string | null
+          created_at: string
+          error_count: number | null
+          id: string
+          message_template: string | null
+          name: string
+          segment_filters: Json | null
+          sent_count: number | null
+          status: string
+          total_recipients: number | null
+          type: string
+        }
+        Insert: {
+          ai_goal?: string | null
+          ai_tone?: string | null
+          buttons?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          error_count?: number | null
+          id?: string
+          message_template?: string | null
+          name: string
+          segment_filters?: Json | null
+          sent_count?: number | null
+          status?: string
+          total_recipients?: number | null
+          type?: string
+        }
+        Update: {
+          ai_goal?: string | null
+          ai_tone?: string | null
+          buttons?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          error_count?: number | null
+          id?: string
+          message_template?: string | null
+          name?: string
+          segment_filters?: Json | null
+          sent_count?: number | null
+          status?: string
+          total_recipients?: number | null
+          type?: string
+        }
+        Relationships: []
+      }
       clicks: {
         Row: {
           id: string
