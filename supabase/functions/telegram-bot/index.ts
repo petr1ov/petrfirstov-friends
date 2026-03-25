@@ -196,7 +196,7 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
         [{ text: "🔍 Посмотреть кейсы", callback_data: "cases" }],
         [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
         [{ text: "💰 Сколько стоит", callback_data: "pricing" }],
-        [{ text: "📱 Мини-приложение", url: "https://petrfirstov-friends.lovable.app/mini-app" }],
+        [{ text: "📱 Мини-приложение", url: "https://petrfirstov.lovable.app/mini-app" }],
         [{ text: "🚀 Стать партнёром", callback_data: "register" }],
       ],
     },
