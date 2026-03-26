@@ -23,7 +23,7 @@ const CTASection = () => (
           </p>
 
           <a
-            href="https://t.me/PetrFirstovBot"
+            href="https://t.me/PetrFirstovBot?start=miniapp_launch"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block px-8 py-3.5 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm shadow-xl shadow-miniapp-purple/30 hover:shadow-miniapp-purple/50 hover:scale-[1.02] active:scale-[0.98] transition-all"
