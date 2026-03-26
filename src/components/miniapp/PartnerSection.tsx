@@ -40,7 +40,7 @@ const PartnerSection = () => (
           </div>
 
           <a
-            href="https://t.me/PetrFirstovBot"
+            href="https://t.me/PetrFirstovBot?start=miniapp_partner"
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full py-3 rounded-xl bg-white/5 border border-miniapp-purple/30 text-center text-sm font-semibold text-miniapp-purple hover:bg-miniapp-purple/10 transition-colors"

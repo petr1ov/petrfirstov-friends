@@ -172,10 +172,33 @@ async function getEventOffer(eventCode: string): Promise<{ price: number; spotsL
 // ====== MAIN BOT SCENARIOS ======
 
 async function handleStart(chatId: number, firstName: string, startParam?: string) {
-  if (startParam && startParam !== "" && !startParam.startsWith("ref_")) {
-    // Event scenario
-    await handleEventEntry(chatId, firstName, startParam);
-    return;
+  if (startParam && startParam !== "") {
+    // Track source from mini app
+    const miniappSources: Record<string, string> = {
+      miniapp_contact: "miniapp_contact",
+      miniapp_launch: "miniapp_launch",
+      miniapp_partner: "miniapp_partner",
+      miniapp_calculator: "miniapp_calculator",
+    };
+
+    if (miniappSources[startParam]) {
+      await trackAction(chatId, "miniapp_deeplink", { source: startParam });
+      await supabase.from("bot_users").update({ source: startParam }).eq("telegram_id", chatId);
+
+      if (startParam === "miniapp_partner") {
+        await handleRegister(chatId, chatId, undefined);
+        return;
+      }
+      if (startParam === "miniapp_calculator") {
+        await handleWantBotcard(chatId);
+        return;
+      }
+      // miniapp_launch / miniapp_contact — fall through to standard start with context
+    } else if (!startParam.startsWith("ref_")) {
+      // Event scenario
+      await handleEventEntry(chatId, firstName, startParam);
+      return;
+    }
   }
 
   // Standard scenario
