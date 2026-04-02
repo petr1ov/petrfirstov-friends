@@ -10,8 +10,21 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
 const ADMIN_CHAT_ID = Deno.env.get("TELEGRAM_ADMIN_CHAT_ID")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const AITUNNEL_API_KEY = Deno.env.get("AITUNNEL_API_KEY") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+// ====== MARKDOWN TO HTML CONVERTER ======
+
+function markdownToHtml(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/\*(.+?)\*/g, "<i>$1</i>")
+    .replace(/__(.+?)__/g, "<b>$1</b>")
+    .replace(/_(.+?)_/g, "<i>$1</i>")
+    .replace(/`(.+?)`/g, "<code>$1</code>")
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+}
 
 // ====== TELEGRAM API HELPERS ======
 
@@ -54,12 +67,54 @@ async function trackAction(telegramId: number, action: string, metadata: any = {
   });
 }
 
+// ====== VOICE RECOGNITION ======
+
+async function transcribeVoice(fileId: string): Promise<string> {
+  if (!AITUNNEL_API_KEY) return "";
+
+  // Get file path from Telegram
+  const fileResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ file_id: fileId }),
+  });
+  const fileData = await fileResp.json();
+  if (!fileData.ok) return "";
+
+  const filePath = fileData.result.file_path;
+
+  // Download the voice file
+  const downloadResp = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
+  if (!downloadResp.ok) return "";
+  const audioBlob = await downloadResp.blob();
+
+  // Send to Whisper via aitunnel
+  const formData = new FormData();
+  formData.append("file", audioBlob, "voice.ogg");
+  formData.append("model", "whisper-1");
+
+  const whisperResp = await fetch("https://api.aitunnel.ru/v1/audio/transcriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${AITUNNEL_API_KEY}`,
+    },
+    body: formData,
+  });
+
+  if (!whisperResp.ok) {
+    console.error("Whisper error:", whisperResp.status);
+    return "";
+  }
+
+  const result = await whisperResp.json();
+  return result.text || "";
+}
+
 // ====== AI HELPER ======
 
 async function getAIResponse(telegramId: number, userMessage: string): Promise<string> {
   if (!LOVABLE_API_KEY) return "AI-функция временно недоступна.";
 
-  // Get conversation history (last 10 messages)
   const { data: history } = await supabase
     .from("ai_conversations")
     .select("role, content")
@@ -67,7 +122,6 @@ async function getAIResponse(telegramId: number, userMessage: string): Promise<s
     .order("created_at", { ascending: true })
     .limit(10);
 
-  // Get user context
   const { data: botUser } = await supabase
     .from("bot_users")
     .select("niche, services, goal")
@@ -85,6 +139,8 @@ async function getAIResponse(telegramId: number, userMessage: string): Promise<s
 — вести диалог дружелюбно и профессионально
 — подводить к заявке на проект
 — показывать ценность автоматизации
+
+ВАЖНО: Форматируй ответ в HTML для Telegram. Используй <b>жирный</b> и <i>курсив</i>. НЕ используй Markdown (**, __, *).
 
 Услуги Петра:
 • Ботовизитка — от 10 000 ₽
@@ -128,9 +184,11 @@ ${nicheContext}${servicesContext}${goalContext}
     }
 
     const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || "Не удалось получить ответ.";
+    let aiResponse = data.choices?.[0]?.message?.content || "Не удалось получить ответ.";
 
-    // Save conversation
+    // Convert any remaining markdown to HTML just in case
+    aiResponse = markdownToHtml(aiResponse);
+
     await supabase.from("ai_conversations").insert([
       { telegram_id: telegramId, role: "user", content: userMessage },
       { telegram_id: telegramId, role: "assistant", content: aiResponse },
@@ -166,14 +224,13 @@ async function getEventOffer(eventCode: string): Promise<{ price: number; spotsL
       tier: `Следующие ${data.tier3_limit}`,
     };
   }
-  return null; // sold out
+  return null;
 }
 
 // ====== MAIN BOT SCENARIOS ======
 
 async function handleStart(chatId: number, firstName: string, startParam?: string) {
   if (startParam && startParam !== "") {
-    // Track source from mini app
     const miniappSources: Record<string, string> = {
       miniapp_contact: "miniapp_contact",
       miniapp_launch: "miniapp_launch",
@@ -193,15 +250,12 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
         await handleWantBotcard(chatId);
         return;
       }
-      // miniapp_launch / miniapp_contact — fall through to standard start with context
     } else if (!startParam.startsWith("ref_")) {
-      // Event scenario
       await handleEventEntry(chatId, firstName, startParam);
       return;
     }
   }
 
-  // Standard scenario
   const text = `Привет, ${firstName} 👋
 Рад, что ты здесь!
 
@@ -351,6 +405,8 @@ async function handleTryAI(chatId: number) {
 • «Мне нужен сайт для моего бизнеса»
 • «Как AI может помочь моей компании?»
 
+🎙 Можешь отправить голосовое сообщение — я тоже пойму!
+
 👇 Просто напиши сообщение, и я отвечу как AI-ассистент`;
 
   await sendMessage(chatId, text, {
@@ -359,7 +415,6 @@ async function handleTryAI(chatId: number) {
     },
   });
 
-  // Set user state to AI mode
   await supabase.from("bot_users").update({ goal: "ai_chat" }).eq("telegram_id", chatId);
 }
 
@@ -390,7 +445,6 @@ async function handleWantBotcard(chatId: number) {
 }
 
 async function handleLeaveRequest(chatId: number, telegramId: number, firstName: string, username?: string) {
-  // Create lead from bot
   const { data: partner } = await supabase.from("partners").select("ref_code").eq("telegram_id", telegramId).single();
 
   await supabase.from("leads").insert({
@@ -414,7 +468,6 @@ async function handleLeaveRequest(chatId: number, telegramId: number, firstName:
     },
   );
 
-  // Notify admin
   await sendMessage(
     ADMIN_CHAT_ID,
     `🆕 <b>Новая заявка из бота</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nTelegram ID: ${telegramId}`,
@@ -437,7 +490,6 @@ async function handleEventOffer(
     return;
   }
 
-  // Increment sold count
   const { data: currentOffer } = await supabase
     .from("event_offers")
     .select("sold_count")
@@ -449,7 +501,6 @@ async function handleEventOffer(
     .update({ sold_count: (currentOffer?.sold_count || 0) + 1 })
     .eq("event_code", eventCode);
 
-  // Create lead
   await supabase.from("leads").insert({
     ref_code: `event_${eventCode}`,
     name: firstName,
@@ -471,14 +522,13 @@ async function handleEventOffer(
     },
   );
 
-  // Notify admin
   await sendMessage(
     ADMIN_CHAT_ID,
     `🔥 <b>Новая заявка с мероприятия!</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nСобытие: ${eventCode}\nЦена: ${offer.price} ₽\nУровень: ${offer.tier}`,
   );
 }
 
-// ====== PARTNER PROGRAM (existing) ======
+// ====== PARTNER PROGRAM ======
 
 async function handleRegister(chatId: number, telegramId: number, username: string | undefined) {
   const { data: existing } = await supabase.from("partners").select("*").eq("telegram_id", telegramId).single();
@@ -501,7 +551,6 @@ async function handleRegister(chatId: number, telegramId: number, username: stri
   }
 
   await sendMessage(chatId, "📝 Для регистрации укажите ваше <b>имя</b>:\n\n(Просто отправьте текстовое сообщение)");
-  // Set state
   await supabase.from("bot_users").update({ goal: "register_name" }).eq("telegram_id", telegramId);
 }
 
@@ -511,7 +560,6 @@ async function handleRegistrationName(chatId: number, telegramId: number, userna
     return;
   }
 
-  // Save name temporarily and ask for traffic source
   await supabase
     .from("bot_users")
     .update({ goal: `register_traffic:${name}` })
@@ -560,7 +608,6 @@ async function completeRegistration(
     return;
   }
 
-  // Clear state
   await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
 
   const link = `https://PetrFirstovBot/?ref=${refCode}`;
@@ -705,7 +752,6 @@ async function handleAdminCommand(chatId: number, telegramId: number) {
     return;
   }
 
-  // Generate one-time token
   const token = crypto.randomUUID();
   await supabase.from("admin_login_tokens").insert({
     token,
@@ -778,7 +824,6 @@ Deno.serve(async (req) => {
         });
       } else if (data.startsWith("traffic_")) {
         const sourceKey = data.replace("traffic_", "");
-        // Get name from bot_users goal field
         const { data: botUser } = await supabase
           .from("bot_users")
           .select("goal")
@@ -794,16 +839,33 @@ Deno.serve(async (req) => {
       return new Response("OK", { headers: corsHeaders });
     }
 
-    // Handle text messages
+    // Handle messages (text + voice)
     if (update.message) {
       const msg = update.message;
       const chatId = msg.chat.id;
       const telegramId = msg.from.id;
       const username = msg.from.username;
       const firstName = msg.from.first_name || "";
-      const text = msg.text || "";
+      let text = msg.text || "";
 
       await trackUser(telegramId, firstName, username);
+
+      // Handle voice messages
+      if (msg.voice || msg.audio) {
+        const fileId = msg.voice?.file_id || msg.audio?.file_id;
+        if (fileId) {
+          await trackAction(telegramId, "voice_message");
+          const transcription = await transcribeVoice(fileId);
+          if (transcription) {
+            text = transcription;
+            // Let user know what was recognized
+            await sendMessage(chatId, `🎙 <i>Распознано:</i> ${transcription}`);
+          } else {
+            await sendMessage(chatId, "❌ Не удалось распознать голосовое сообщение. Попробуйте написать текстом.");
+            return new Response("OK", { headers: corsHeaders });
+          }
+        }
+      }
 
       if (text.startsWith("/start")) {
         const startParam = text.split(" ")[1] || "";
@@ -811,7 +873,7 @@ Deno.serve(async (req) => {
         await handleStart(chatId, firstName, startParam);
       } else if (text === "/admin") {
         await handleAdminCommand(chatId, telegramId);
-      } else {
+      } else if (text) {
         // Check user state
         const { data: botUser } = await supabase
           .from("bot_users")
@@ -823,7 +885,6 @@ Deno.serve(async (req) => {
           await trackAction(telegramId, "registration:name");
           await handleRegistrationName(chatId, telegramId, username, text);
         } else if (botUser?.goal === "ai_chat" || !botUser?.goal) {
-          // AI mode or default - send to AI
           await trackAction(telegramId, "ai_message", { length: text.length });
           const aiResponse = await getAIResponse(telegramId, text);
           await sendMessage(chatId, aiResponse, {
