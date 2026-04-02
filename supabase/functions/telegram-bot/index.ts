@@ -70,44 +70,71 @@ async function trackAction(telegramId: number, action: string, metadata: any = {
 // ====== VOICE RECOGNITION ======
 
 async function transcribeVoice(fileId: string): Promise<string> {
-  if (!AITUNNEL_API_KEY) return "";
-
-  // Get file path from Telegram
-  const fileResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ file_id: fileId }),
-  });
-  const fileData = await fileResp.json();
-  if (!fileData.ok) return "";
-
-  const filePath = fileData.result.file_path;
-
-  // Download the voice file
-  const downloadResp = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
-  if (!downloadResp.ok) return "";
-  const audioBlob = await downloadResp.blob();
-
-  // Send to Whisper via aitunnel
-  const formData = new FormData();
-  formData.append("file", audioBlob, "voice.ogg");
-  formData.append("model", "whisper-1");
-
-  const whisperResp = await fetch("https://api.aitunnel.ru/v1/audio/transcriptions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${AITUNNEL_API_KEY}`,
-    },
-    body: formData,
-  });
-
-  if (!whisperResp.ok) {
-    console.error("Whisper error:", whisperResp.status);
+  if (!AITUNNEL_API_KEY) {
+    console.error("AITUNNEL_API_KEY not set");
     return "";
   }
 
-  const result = await whisperResp.json();
-  return result.text || "";
+  try {
+    // Get file path from Telegram
+    const fileResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_id: fileId }),
+    });
+    const fileData = await fileResp.json();
+    if (!fileData.ok) {
+      console.error("getFile failed:", JSON.stringify(fileData));
+      return "";
+    }
+
+    const filePath = fileData.result.file_path;
+
+    // Download the voice file
+    const downloadResp = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
+    if (!downloadResp.ok) {
+      console.error("Download failed:", downloadResp.status);
+      return "";
+    }
+    const audioBytes = new Uint8Array(await downloadResp.arrayBuffer());
+
+    // Send to Whisper via aitunnel
+    const boundary = "----FormBoundary" + crypto.randomUUID().replace(/-/g, "");
+    const encoder = new TextEncoder();
+
+    const preamble = encoder.encode(
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="voice.ogg"\r\nContent-Type: audio/ogg\r\n\r\n`
+    );
+    const midPart = encoder.encode(
+      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n--${boundary}--\r\n`
+    );
+
+    const body = new Uint8Array(preamble.length + audioBytes.length + midPart.length);
+    body.set(preamble, 0);
+    body.set(audioBytes, preamble.length);
+    body.set(midPart, preamble.length + audioBytes.length);
+
+    const whisperResp = await fetch("https://api.aitunnel.ru/v1/audio/transcriptions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${AITUNNEL_API_KEY}`,
+        "Content-Type": `multipart/form-data; boundary=${boundary}`,
+      },
+      body: body,
+    });
+
+    if (!whisperResp.ok) {
+      const errText = await whisperResp.text();
+      console.error("Whisper error:", whisperResp.status, errText);
+      return "";
+    }
+
+    const result = await whisperResp.json();
+    return result.text || "";
+  } catch (e) {
+    console.error("transcribeVoice error:", e);
+    return "";
+  }
 }
 
 // ====== AI HELPER ======
