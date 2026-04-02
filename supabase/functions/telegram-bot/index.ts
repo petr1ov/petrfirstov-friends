@@ -137,9 +137,100 @@ async function transcribeVoice(fileId: string): Promise<string> {
   }
 }
 
+// ====== ADMIN AI HELPER ======
+
+async function getAdminAIResponse(telegramId: number, userMessage: string): Promise<string> {
+  if (!LOVABLE_API_KEY) return "AI-функция временно недоступна.";
+
+  // Gather DB data for admin context
+  const [usersRes, leadsRes, partnersRes, actionsRes] = await Promise.all([
+    supabase.from("bot_users").select("telegram_id, first_name, username, source, created_at, last_active_at, niche, services, goal").order("created_at", { ascending: false }).limit(50),
+    supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(50),
+    supabase.from("partners").select("*").order("created_at", { ascending: false }).limit(50),
+    supabase.from("user_actions").select("action, telegram_id, created_at").order("created_at", { ascending: false }).limit(100),
+  ]);
+
+  const dbContext = `
+ДАННЫЕ СИСТЕМЫ (актуальные):
+
+Пользователи бота (последние 50):
+${JSON.stringify(usersRes.data || [], null, 0)}
+
+Лиды (последние 50):
+${JSON.stringify(leadsRes.data || [], null, 0)}
+
+Партнёры (последние 50):
+${JSON.stringify(partnersRes.data || [], null, 0)}
+
+Последние действия (100):
+${JSON.stringify(actionsRes.data || [], null, 0)}
+`;
+
+  const systemPrompt = `Ты — AI-ассистент админа Петра Фирстова. Ты помогаешь управлять бизнесом.
+
+Ты можешь:
+— показывать списки пользователей, лидов, партнёров
+— анализировать активность
+— давать рекомендации по бизнесу
+— отвечать на любые вопросы по данным
+
+ВАЖНО: Форматируй ответ в HTML для Telegram. Используй <b>жирный</b> и <i>курсив</i>. НЕ используй Markdown.
+Отвечай кратко и по делу.
+
+${dbContext}`;
+
+  const { data: history } = await supabase
+    .from("ai_conversations")
+    .select("role, content")
+    .eq("telegram_id", telegramId)
+    .order("created_at", { ascending: true })
+    .limit(10);
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...(history || []).map((m: any) => ({ role: m.role, content: m.content })),
+    { role: "user", content: userMessage },
+  ];
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages }),
+    });
+
+    if (!response.ok) {
+      console.error("AI Gateway error:", response.status);
+      return "AI временно недоступен.";
+    }
+
+    const data = await response.json();
+    let aiResponse = data.choices?.[0]?.message?.content || "Не удалось получить ответ.";
+    aiResponse = markdownToHtml(aiResponse);
+
+    await supabase.from("ai_conversations").insert([
+      { telegram_id: telegramId, role: "user", content: userMessage },
+      { telegram_id: telegramId, role: "assistant", content: aiResponse },
+    ]);
+
+    return aiResponse;
+  } catch (e) {
+    console.error("Admin AI error:", e);
+    return "Ошибка AI. Попробуйте позже.";
+  }
+}
+
 // ====== AI HELPER ======
 
 async function getAIResponse(telegramId: number, userMessage: string): Promise<string> {
+  // If admin — use admin AI with DB access
+  if (telegramId === ADMIN_TELEGRAM_ID) {
+    return getAdminAIResponse(telegramId, userMessage);
+  }
+
   if (!LOVABLE_API_KEY) return "AI-функция временно недоступна.";
 
   const { data: history } = await supabase
@@ -199,10 +290,7 @@ ${nicheContext}${servicesContext}${goalContext}
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-      }),
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages }),
     });
 
     if (!response.ok) {
@@ -212,8 +300,6 @@ ${nicheContext}${servicesContext}${goalContext}
 
     const data = await response.json();
     let aiResponse = data.choices?.[0]?.message?.content || "Не удалось получить ответ.";
-
-    // Convert any remaining markdown to HTML just in case
     aiResponse = markdownToHtml(aiResponse);
 
     await supabase.from("ai_conversations").insert([
@@ -227,10 +313,6 @@ ${nicheContext}${servicesContext}${goalContext}
     return "Извините, произошла ошибка. Напишите @petrfirstov напрямую.";
   }
 }
-
-// ====== EVENT OFFER LOGIC ======
-
-async function getEventOffer(eventCode: string): Promise<{ price: number; spotsLeft: number; tier: string } | null> {
   const { data } = await supabase.from("event_offers").select("*").eq("event_code", eventCode).single();
 
   if (!data) return null;
