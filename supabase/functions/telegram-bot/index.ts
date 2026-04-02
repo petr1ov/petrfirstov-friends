@@ -13,6 +13,7 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const AITUNNEL_API_KEY = Deno.env.get("AITUNNEL_API_KEY") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const ADMIN_TELEGRAM_ID = 189415023;
 
 // ====== MARKDOWN TO HTML CONVERTER ======
 
