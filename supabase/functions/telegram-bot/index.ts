@@ -854,7 +854,6 @@ async function handleMaterialRecommend(chatId: number, telegramId: number) {
   );
 }
 
-const ADMIN_TELEGRAM_ID = 189415023;
 
 async function handleAdminCommand(chatId: number, telegramId: number) {
   if (telegramId !== ADMIN_TELEGRAM_ID) {
