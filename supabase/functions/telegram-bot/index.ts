@@ -314,6 +314,10 @@ ${nicheContext}${servicesContext}${goalContext}
     return "Извините, произошла ошибка. Напишите @petrfirstov напрямую.";
   }
 }
+
+// ====== EVENT OFFER LOGIC ======
+
+async function getEventOffer(eventCode: string): Promise<{ price: number; spotsLeft: number; tier: string } | null> {
   const { data } = await supabase.from("event_offers").select("*").eq("event_code", eventCode).single();
 
   if (!data) return null;
