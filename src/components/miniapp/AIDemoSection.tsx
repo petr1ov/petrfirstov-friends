@@ -101,7 +101,7 @@ const AIDemoSection = () => {
                       : "bg-white/[0.06] text-miniapp-foreground rounded-bl-md"
                   }`}
                 >
-                  <ReactMarkdown className="prose prose-sm prose-invert max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0">{m.content}</ReactMarkdown>
+                  <div className="prose prose-sm prose-invert max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0"><ReactMarkdown>{m.content}</ReactMarkdown></div>
                 </div>
                 {m.role === "user" && (
                   <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-1">
