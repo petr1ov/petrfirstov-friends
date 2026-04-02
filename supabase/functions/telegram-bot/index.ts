@@ -967,8 +967,6 @@ Deno.serve(async (req) => {
           const transcription = await transcribeVoice(fileId);
           if (transcription) {
             text = transcription;
-            // Let user know what was recognized
-            await sendMessage(chatId, `🎙 <i>Распознано:</i> ${transcription}`);
           } else {
             await sendMessage(chatId, "❌ Не удалось распознать голосовое сообщение. Попробуйте написать текстом.");
             return new Response("OK", { headers: corsHeaders });
