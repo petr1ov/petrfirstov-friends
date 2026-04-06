@@ -10,6 +10,7 @@ type Case = {
   description: string;
   features: string[];
   result: string;
+  link?: string;
 };
 
 type Category = {
