@@ -12,21 +12,41 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, "");
+}
+
 async function sendTelegramMessage(chatId: number, text: string, buttons?: any[]) {
+  // Try HTML first, fall back to plain text if parsing fails
   const body: any = { chat_id: chatId, text, parse_mode: "HTML" };
   if (buttons && buttons.length > 0) {
     body.reply_markup = {
       inline_keyboard: buttons.map((b: any) => [{ text: b.text, url: b.url || undefined, callback_data: b.callback_data || undefined }]),
     };
   }
-  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+  let res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Telegram error: ${err}`);
+    const errText = await res.text();
+    // If HTML parsing failed, retry as plain text
+    if (errText.includes("can't parse entities")) {
+      const plainBody = { ...body, text: stripHtml(text), parse_mode: undefined };
+      delete plainBody.parse_mode;
+      res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(plainBody),
+      });
+      if (!res.ok) {
+        const err2 = await res.text();
+        throw new Error(`Telegram error: ${err2}`);
+      }
+      return res.json();
+    }
+    throw new Error(`Telegram error: ${errText}`);
   }
   return res.json();
 }
