@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Smartphone, Server, ChevronRight, X, Rocket, Calculator } from "lucide-react";
+import { CreditCard, Smartphone, Server, ChevronRight, X, Rocket, Calculator, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type Case = {
@@ -10,6 +10,7 @@ type Case = {
   description: string;
   features: string[];
   result: string;
+  link?: string;
 };
 
 type Category = {
@@ -39,6 +40,7 @@ const categories: Category[] = [
           "Уведомления риелтору о горячих лидах",
         ],
         result: "Автоответы → сбор заявок → рост записей без переписки",
+        link: "https://t.me/RieltorDemoBot",
       },
       {
         title: "ИИ-визитка для эксперта по EQ",
@@ -52,6 +54,7 @@ const categories: Category[] = [
           "Прогрев через контент",
         ],
         result: "Клиенты узнают → доверяют → записываются без участия эксперта",
+        link: "https://t.me/EQExpertBot",
       },
     ],
   },
@@ -248,6 +251,18 @@ const ProductsCasesSection = () => {
                     </div>
                   ))}
                 </div>
+
+                {selectedCase.link && (
+                  <a
+                    href={selectedCase.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white text-sm font-semibold hover:bg-white/[0.1] transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Посмотреть кейс
+                  </a>
+                )}
 
                 <div className="p-3 rounded-xl bg-miniapp-neon/5 border border-miniapp-neon/10">
                   <p className="text-xs text-miniapp-neon">✨ {selectedCase.result}</p>

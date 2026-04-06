@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CreditCard, Smartphone, Server, Eye } from "lucide-react";
+import { CreditCard, Smartphone, Server, Eye, ExternalLink } from "lucide-react";
 
 type CaseItem = {
   id: string;
@@ -14,6 +14,7 @@ type CaseItem = {
   description: string;
   features: string[];
   result: string;
+  link?: string;
 };
 
 const categoryLabels: Record<string, string> = {
@@ -43,6 +44,7 @@ const allCases: CaseItem[] = [
     description: "Telegram-бот, который отвечает на вопросы клиентов о недвижимости, собирает заявки и квалифицирует лидов.",
     features: ["Автоматические ответы по объектам", "Сбор и квалификация заявок", "Каталог недвижимости в боте", "Уведомления о горячих лидах"],
     result: "Автоответы → сбор заявок → рост записей без переписки",
+    link: "https://t.me/RieltorDemoBot",
   },
   {
     id: "2", title: "ИИ-визитка для эксперта по EQ", subtitle: "Привлечение клиентов на консультации",
@@ -50,6 +52,7 @@ const allCases: CaseItem[] = [
     description: "Бот-визитка, который рассказывает об услугах эксперта и записывает на консультацию.",
     features: ["Презентация услуг и кейсов", "Ответы на типовые вопросы", "Онлайн-запись на консультацию", "Прогрев через контент"],
     result: "Клиенты узнают → доверяют → записываются без участия эксперта",
+    link: "https://t.me/EQExpertBot",
   },
   {
     id: "3", title: "Город+", subtitle: "Агрегатор мероприятий",
@@ -156,6 +159,17 @@ const Cases = () => {
               <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
                 <p className="text-sm text-accent">✨ {selected.result}</p>
               </div>
+              {selected.link && (
+                <a
+                  href={selected.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Ссылка на кейс
+                </a>
+              )}
               <Badge className={categoryColors[selected.category]}>{categoryLabels[selected.category]}</Badge>
             </>
           )}
