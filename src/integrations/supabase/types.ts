@@ -193,6 +193,48 @@ export type Database = {
         }
         Relationships: []
       }
+      cases: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          features: string[]
+          id: string
+          link: string | null
+          price: string
+          result: string
+          sort_order: number
+          subtitle: string
+          title: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          features?: string[]
+          id?: string
+          link?: string | null
+          price?: string
+          result?: string
+          sort_order?: number
+          subtitle?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          features?: string[]
+          id?: string
+          link?: string | null
+          price?: string
+          result?: string
+          sort_order?: number
+          subtitle?: string
+          title?: string
+        }
+        Relationships: []
+      }
       clicks: {
         Row: {
           id: string
