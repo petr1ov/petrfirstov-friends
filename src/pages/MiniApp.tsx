@@ -15,8 +15,7 @@ const MiniApp = () => {
       <MiniAppNav />
       <HeroSection />
       <HowItWorks />
-      <CasesSection />
-      <ProductsSection />
+      <ProductsCasesSection />
       <AIDemoSection />
       <CalculatorQuiz />
       <PartnerSection />
