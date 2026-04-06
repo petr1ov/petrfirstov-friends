@@ -159,6 +159,17 @@ const Cases = () => {
               <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
                 <p className="text-sm text-accent">✨ {selected.result}</p>
               </div>
+              {selected.link && (
+                <a
+                  href={selected.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Ссылка на кейс
+                </a>
+              )}
               <Badge className={categoryColors[selected.category]}>{categoryLabels[selected.category]}</Badge>
             </>
           )}
