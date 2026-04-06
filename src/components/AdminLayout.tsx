@@ -10,6 +10,7 @@ const navItems = [
   { to: "/bot-users", icon: Bot, label: "Пользователи бота" },
   { to: "/partners", icon: Users, label: "Партнёры" },
   { to: "/leads", icon: UserCheck, label: "Лиды" },
+  { to: "/cases", icon: Briefcase, label: "Кейсы" },
   { to: "/payouts", icon: CreditCard, label: "Выплаты" },
   { to: "/broadcasts", icon: Megaphone, label: "Рассылки" },
   { to: "/analytics", icon: BarChart3, label: "Аналитика" },
