@@ -54,6 +54,7 @@ const categories: Category[] = [
           "Прогрев через контент",
         ],
         result: "Клиенты узнают → доверяют → записываются без участия эксперта",
+        link: "https://t.me/EQExpertBot",
       },
     ],
   },
