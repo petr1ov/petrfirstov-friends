@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Smartphone, Server, ChevronRight, X, Rocket, Calculator } from "lucide-react";
+import { CreditCard, Smartphone, Server, ChevronRight, X, Rocket, Calculator, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type Case = {
