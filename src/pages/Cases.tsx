@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CreditCard, Smartphone, Server, Eye } from "lucide-react";
+import { CreditCard, Smartphone, Server, Eye, ExternalLink } from "lucide-react";
 
 type CaseItem = {
   id: string;
