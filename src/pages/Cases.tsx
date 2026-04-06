@@ -14,6 +14,7 @@ type CaseItem = {
   description: string;
   features: string[];
   result: string;
+  link?: string;
 };
 
 const categoryLabels: Record<string, string> = {
