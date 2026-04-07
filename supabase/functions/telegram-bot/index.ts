@@ -659,7 +659,7 @@ async function handleRegister(chatId: number, telegramId: number, username: stri
     const text = `✅ Вы уже зарегистрированы!
 
 Ваш реферальный код: <code>${existing.ref_code}</code>
-Ваша ссылка: <code>https://PetrFirstovBot/?ref=${existing.ref_code}</code>`;
+Ваша ссылка: <code>https://t.me/PetrFirstovBot?start=${existing.ref_code}</code>`;
 
     await sendMessage(chatId, text, {
       reply_markup: {
