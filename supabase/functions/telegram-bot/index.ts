@@ -104,10 +104,10 @@ async function transcribeVoice(fileId: string): Promise<string> {
     const encoder = new TextEncoder();
 
     const preamble = encoder.encode(
-      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="voice.ogg"\r\nContent-Type: audio/ogg\r\n\r\n`
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="voice.ogg"\r\nContent-Type: audio/ogg\r\n\r\n`,
     );
     const midPart = encoder.encode(
-      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n--${boundary}--\r\n`
+      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n--${boundary}--\r\n`,
     );
 
     const body = new Uint8Array(preamble.length + audioBytes.length + midPart.length);
@@ -145,10 +145,18 @@ async function getAdminAIResponse(telegramId: number, userMessage: string): Prom
 
   // Gather DB data for admin context
   const [usersRes, leadsRes, partnersRes, actionsRes] = await Promise.all([
-    supabase.from("bot_users").select("telegram_id, first_name, username, source, created_at, last_active_at, niche, services, goal").order("created_at", { ascending: false }).limit(50),
+    supabase
+      .from("bot_users")
+      .select("telegram_id, first_name, username, source, created_at, last_active_at, niche, services, goal")
+      .order("created_at", { ascending: false })
+      .limit(50),
     supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(50),
     supabase.from("partners").select("*").order("created_at", { ascending: false }).limit(50),
-    supabase.from("user_actions").select("action, telegram_id, created_at").order("created_at", { ascending: false }).limit(100),
+    supabase
+      .from("user_actions")
+      .select("action, telegram_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
   const dbContext = `
@@ -609,7 +617,7 @@ async function handleEventOffer(
     .select("sold_count")
     .eq("event_code", eventCode)
     .single();
-  
+
   await supabase
     .from("event_offers")
     .update({ sold_count: (currentOffer?.sold_count || 0) + 1 })
@@ -724,7 +732,7 @@ async function completeRegistration(
 
   await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
 
-  const link = `https://PetrFirstovBot/?ref=${refCode}`;
+  const link = `https://t.me/PetrFirstovBot/?ref=${refCode}`;
   await sendMessage(
     chatId,
     `🎉 <b>Регистрация завершена!</b>
@@ -783,7 +791,7 @@ async function handleStats(chatId: number, telegramId: number) {
     chatId,
     `📊 <b>Ваша статистика</b>
 
-🔗 Ссылка: <code>https://PetrFirstovBot/?ref=${partner.ref_code}</code>
+🔗 Ссылка: <code>https://t.me/PetrFirstovBot/?ref=${partner.ref_code}</code>
 
 👁 Переходы: <b>${clicks.count || 0}</b>
 📋 Лиды: <b>${leads.count || 0}</b>
@@ -841,7 +849,7 @@ async function handleMaterialServices(chatId: number) {
 async function handleMaterialRecommend(chatId: number, telegramId: number) {
   const { data: partner } = await supabase.from("partners").select("ref_code").eq("telegram_id", telegramId).single();
 
-  const link = partner ? `https://PetrFirstovBot/?ref=${partner.ref_code}` : "https://petrfirstov.ru";
+  const link = partner ? `https://t.me/PetrFirstovBot/?ref=${partner.ref_code}` : "https://petrfirstov.ru";
 
   await sendMessage(
     chatId,
@@ -858,7 +866,6 @@ async function handleMaterialRecommend(chatId: number, telegramId: number) {
   );
 }
 
-
 async function handleAdminCommand(chatId: number, telegramId: number) {
   if (telegramId !== ADMIN_TELEGRAM_ID) {
     await sendMessage(chatId, "❌ У вас нет доступа к админ-панели.");
@@ -873,13 +880,15 @@ async function handleAdminCommand(chatId: number, telegramId: number) {
 
   const loginUrl = `https://petrfirstov.lovable.app/admin-login?token=${token}`;
 
-  await sendMessage(chatId, `🔐 <b>Вход в админ-панель</b>\n\nНажмите кнопку ниже для входа.\n⏳ Ссылка действительна 5 минут.`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🔓 Войти в админку", url: loginUrl }],
-      ],
+  await sendMessage(
+    chatId,
+    `🔐 <b>Вход в админ-панель</b>\n\nНажмите кнопку ниже для входа.\n⏳ Ссылка действительна 5 минут.`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔓 Войти в админку", url: loginUrl }]],
+      },
     },
-  });
+  );
 }
 
 // ====== MAIN HANDLER ======
