@@ -732,7 +732,7 @@ async function completeRegistration(
 
   await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
 
-  const link = `https://t.me/PetrFirstovBot/?ref=${refCode}`;
+  const link = `https://t.me/PetrFirstovBot?start=${refCode}`;
   await sendMessage(
     chatId,
     `🎉 <b>Регистрация завершена!</b>
@@ -791,7 +791,7 @@ async function handleStats(chatId: number, telegramId: number) {
     chatId,
     `📊 <b>Ваша статистика</b>
 
-🔗 Ссылка: <code>https://t.me/PetrFirstovBot/?ref=${partner.ref_code}</code>
+🔗 Ссылка: <code>https://t.me/PetrFirstovBot?start=${partner.ref_code}</code>
 
 👁 Переходы: <b>${clicks.count || 0}</b>
 📋 Лиды: <b>${leads.count || 0}</b>
@@ -849,7 +849,7 @@ async function handleMaterialServices(chatId: number) {
 async function handleMaterialRecommend(chatId: number, telegramId: number) {
   const { data: partner } = await supabase.from("partners").select("ref_code").eq("telegram_id", telegramId).single();
 
-  const link = partner ? `https://t.me/PetrFirstovBot/?ref=${partner.ref_code}` : "https://petrfirstov.ru";
+  const link = partner ? `https://t.me/PetrFirstovBot?start=${partner.ref_code}` : "https://petrfirstov.ru";
 
   await sendMessage(
     chatId,
