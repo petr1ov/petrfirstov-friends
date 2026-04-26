@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.daily-report]
 verify_jwt = false
+
+[functions.parse-edit]
+verify_jwt = false
+
+[functions.notify-task-done]
+verify_jwt = false
+
+[functions.sync-github]
+verify_jwt = false
