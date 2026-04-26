@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, Users, UserCheck, CreditCard, LogOut, Bot, BarChart3, Megaphone, Menu, Briefcase } from "lucide-react";
+import { LayoutDashboard, Users, UserCheck, CreditCard, LogOut, Bot, BarChart3, Megaphone, Menu, Briefcase, FolderKanban, ListChecks } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -11,6 +11,8 @@ const navItems = [
   { to: "/partners", icon: Users, label: "Партнёры" },
   { to: "/leads", icon: UserCheck, label: "Лиды" },
   { to: "/cases", icon: Briefcase, label: "Кейсы" },
+  { to: "/projects", icon: FolderKanban, label: "Проекты" },
+  { to: "/tasks", icon: ListChecks, label: "Задачи" },
   { to: "/payouts", icon: CreditCard, label: "Выплаты" },
   { to: "/broadcasts", icon: Megaphone, label: "Рассылки" },
   { to: "/analytics", icon: BarChart3, label: "Аналитика" },
