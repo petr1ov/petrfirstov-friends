@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Copy, Trash2, ChevronRight, Sparkles } from "lucide-react";
+import { Plus, Copy, Trash2, ChevronRight, Sparkles, PencilLine } from "lucide-react";
 
 type Task = {
   id: string;
@@ -37,6 +37,7 @@ type Task = {
   type: string;
   created_at: string;
   completed_at: string | null;
+  is_manual?: boolean;
 };
 
 type Project = { id: string; name: string; telegram_id: number };
@@ -58,6 +59,14 @@ export default function Tasks() {
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({ project_id: "", source: "" });
   const [aiBusy, setAiBusy] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualDraft, setManualDraft] = useState({
+    project_id: "",
+    title: "",
+    description: "",
+    status: "done",
+  });
+  const [manualBusy, setManualBusy] = useState(false);
   const { toast } = useToast();
 
   const fetchAll = async () => {
@@ -134,6 +143,42 @@ export default function Tasks() {
     fetchAll();
   };
 
+  const createManual = async () => {
+    if (!manualDraft.project_id || !manualDraft.title.trim()) {
+      return toast({ title: "Заполните проект и название", variant: "destructive" });
+    }
+    setManualBusy(true);
+    const { error } = await supabase.from("tasks").insert({
+      project_id: manualDraft.project_id,
+      title: manualDraft.title.trim(),
+      description: manualDraft.description.trim() || null,
+      status: manualDraft.status,
+      priority: "normal",
+      type: "manual",
+      is_manual: true,
+    });
+    setManualBusy(false);
+    if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+    if (manualDraft.status === "done") {
+      // notify client just like AI tasks when marked done
+      const { data: created } = await supabase
+        .from("tasks")
+        .select("id")
+        .eq("project_id", manualDraft.project_id)
+        .eq("title", manualDraft.title.trim())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (created?.id) {
+        await supabase.functions.invoke("notify-task-done", { body: { task_id: created.id } });
+      }
+    }
+    toast({ title: "Задача создана" });
+    setManualOpen(false);
+    setManualDraft({ project_id: "", title: "", description: "", status: "done" });
+    fetchAll();
+  };
+
   const grouped = STATUSES.map((s) => ({ ...s, items: filtered.filter((t) => t.status === s.key) }));
 
   return (
@@ -160,6 +205,9 @@ export default function Tasks() {
               ))}
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={() => setManualOpen(true)}>
+            <PencilLine className="h-4 w-4 mr-1" /> Ручная задача
+          </Button>
           <Button onClick={() => setCreating(true)}>
             <Plus className="h-4 w-4 mr-1" /> AI-задача
           </Button>
@@ -300,6 +348,67 @@ export default function Tasks() {
             <Button onClick={aiCreate} disabled={aiBusy}>
               <Sparkles className="h-4 w-4 mr-1" />
               {aiBusy ? "AI работает..." : "Создать"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create manually */}
+      <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ручная задача</DialogTitle>
+            <DialogDescription>Создать задачу без AI</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Select
+              value={manualDraft.project_id}
+              onValueChange={(v) => setManualDraft({ ...manualDraft, project_id: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите проект" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Название задачи"
+              value={manualDraft.title}
+              onChange={(e) => setManualDraft({ ...manualDraft, title: e.target.value })}
+            />
+            <Textarea
+              placeholder="Описание (опционально)"
+              value={manualDraft.description}
+              onChange={(e) => setManualDraft({ ...manualDraft, description: e.target.value })}
+              className="min-h-[80px]"
+            />
+            <Select
+              value={manualDraft.status}
+              onValueChange={(v) => setManualDraft({ ...manualDraft, status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s.key} value={s.key}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setManualOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={createManual} disabled={manualBusy}>
+              {manualBusy ? "Сохраняю..." : "Создать"}
             </Button>
           </DialogFooter>
         </DialogContent>
