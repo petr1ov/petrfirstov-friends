@@ -1135,17 +1135,18 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
 
   await sendMessage(chatId, "⏳ AI генерирует идеи улучшений для вашего проекта...");
 
-  if (!LOVABLE_API_KEY) {
+  if (!AITUNNEL_API_KEY) {
     await sendMessage(chatId, "AI временно недоступен.");
     return;
   }
 
   try {
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const resp = await fetch("https://api.aitunnel.ru/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${AITUNNEL_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gemini-3.1-flash-lite-preview",
+        max_tokens: 4000,
         messages: [
           {
             role: "system",
