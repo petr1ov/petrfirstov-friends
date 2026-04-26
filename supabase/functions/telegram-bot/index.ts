@@ -1150,10 +1150,42 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
           {
             role: "system",
             content:
-              "Ты — продуктовый AI-консультант. Сгенерируй 5 кратких, конкретных идей улучшений для проекта клиента. Формат HTML для Telegram: <b>...</b>. Каждая идея отдельной строкой с эмодзи и одним предложением. Без вступлений.",
+              "Ты — продуктовый AI-консультант. Сгенерируй 5 кратких, конкретных идей улучшений для проекта клиента. Верни строго через инструмент return_ideas.",
           },
           { role: "user", content: `Проект: ${project.name}. Прогресс: ${project.progress}%.` },
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "return_ideas",
+              description: "Возвращает список идей улучшений",
+              parameters: {
+                type: "object",
+                properties: {
+                  ideas: {
+                    type: "array",
+                    minItems: 3,
+                    maxItems: 6,
+                    items: {
+                      type: "object",
+                      properties: {
+                        emoji: { type: "string", description: "Один эмодзи" },
+                        title: { type: "string", description: "Короткий заголовок идеи (до 60 символов)" },
+                        description: { type: "string", description: "Одно предложение пояснения (до 180 символов)" },
+                      },
+                      required: ["emoji", "title", "description"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["ideas"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "return_ideas" } },
       }),
     });
     if (!resp.ok) {
@@ -1176,16 +1208,68 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
     }
     const data = await resp.json();
     console.log("ideas AI response:", JSON.stringify(data).slice(0, 500));
-    let ideas = data.choices?.[0]?.message?.content?.trim() || "";
-    if (!ideas) {
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    let ideas: Array<{ emoji: string; title: string; description: string }> = [];
+    if (toolCall?.function?.arguments) {
+      try {
+        const args = JSON.parse(toolCall.function.arguments);
+        if (Array.isArray(args.ideas)) ideas = args.ideas;
+      } catch (e) {
+        console.error("ideas parse error:", e);
+      }
+    }
+    if (ideas.length === 0) {
       await sendMessage(chatId, "❌ AI вернул пустой ответ. Попробуйте ещё раз.", {
         reply_markup: clientMenuKeyboard(),
       });
       return;
     }
-    ideas = markdownToHtml(ideas);
 
-    await sendMessage(chatId, `🚀 <b>Идеи улучшений</b>\n\n${ideas}\n\n💡 Хотите добавить идею в задачи? Отправьте её через «✏️ Отправить правку».`, {
+    await sendMessage(chatId, `🚀 <b>Идеи улучшений для проекта «${project.name}»</b>\n\nНиже ${ideas.length} карточек — каждую можно добавить в задачи или скопировать.`);
+
+    for (const idea of ideas) {
+      const fullText = `${idea.emoji} ${idea.title}\n\n${idea.description}`;
+      // Сохраняем идею, чтобы получить короткий id для callback_data
+      const { data: saved, error: saveErr } = await supabase
+        .from("user_actions")
+        .insert({
+          telegram_id: telegramId,
+          action: "ai_idea",
+          metadata: {
+            project_id: project.id,
+            emoji: idea.emoji,
+            title: idea.title,
+            description: idea.description,
+          },
+        })
+        .select("id")
+        .single();
+
+      if (saveErr || !saved) {
+        console.error("save idea error:", saveErr);
+        continue;
+      }
+      const shortId = saved.id.replace(/-/g, "").slice(0, 24);
+      // Кэш короткого id → uuid через ту же запись metadata.short
+      await supabase
+        .from("user_actions")
+        .update({ metadata: { project_id: project.id, emoji: idea.emoji, title: idea.title, description: idea.description, short: shortId } })
+        .eq("id", saved.id);
+
+      const cardHtml = `${idea.emoji} <b>${escapeHtml(idea.title)}</b>\n\n${escapeHtml(idea.description)}`;
+      await sendMessage(chatId, cardHtml, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "✅ Добавить в задачи", callback_data: `idea_add_${shortId}` },
+              { text: "📋 Скопировать идею", callback_data: `idea_copy_${shortId}` },
+            ],
+          ],
+        },
+      });
+    }
+
+    await sendMessage(chatId, "👇 Выберите действие или вернитесь в меню", {
       reply_markup: clientMenuKeyboard(),
     });
   } catch (e) {
@@ -1194,6 +1278,67 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
       reply_markup: clientMenuKeyboard(),
     });
   }
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function findIdeaByShortId(shortId: string, telegramId: number) {
+  const { data } = await supabase
+    .from("user_actions")
+    .select("id, metadata")
+    .eq("telegram_id", telegramId)
+    .eq("action", "ai_idea")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (!data) return null;
+  return data.find((r: any) => r.metadata?.short === shortId) || null;
+}
+
+async function handleIdeaAdd(chatId: number, telegramId: number, shortId: string) {
+  const row = await findIdeaByShortId(shortId, telegramId);
+  if (!row) {
+    await sendMessage(chatId, "⚠️ Идея не найдена. Сгенерируйте идеи заново.");
+    return;
+  }
+  const meta = row.metadata as any;
+  const { error } = await supabase.from("tasks").insert({
+    project_id: meta.project_id,
+    title: `${meta.emoji} ${meta.title}`,
+    description: meta.description,
+    status: "new",
+    type: "idea",
+    is_manual: true,
+    source_message: "AI idea (client)",
+  });
+  if (error) {
+    console.error("idea add error:", error);
+    await sendMessage(chatId, "❌ Не удалось добавить идею в задачи.");
+    return;
+  }
+  await sendMessage(chatId, `✅ Идея добавлена в задачи:\n\n${meta.emoji} <b>${escapeHtml(meta.title)}</b>`, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
+        [{ text: "🔙 В кабинет", callback_data: "client_menu" }],
+      ],
+    },
+  });
+}
+
+async function handleIdeaCopy(chatId: number, telegramId: number, shortId: string) {
+  const row = await findIdeaByShortId(shortId, telegramId);
+  if (!row) {
+    await sendMessage(chatId, "⚠️ Идея не найдена. Сгенерируйте идеи заново.");
+    return;
+  }
+  const meta = row.metadata as any;
+  const text = `${meta.emoji} ${meta.title}\n\n${meta.description}`;
+  await sendMessage(
+    chatId,
+    `📋 <b>Скопируйте текст ниже</b> (зажмите → копировать):\n\n<code>${escapeHtml(text)}</code>`
+  );
 }
 
 async function handleMyProjects(chatId: number, telegramId: number) {
