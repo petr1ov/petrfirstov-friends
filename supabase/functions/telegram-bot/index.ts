@@ -403,6 +403,7 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
         [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
         [{ text: "💰 Сколько стоит", callback_data: "pricing" }],
         [{ text: "📱 Мини-приложение", url: "https://petrfirstov.lovable.app/mini-app" }],
+        [{ text: "📊 Мой проект", callback_data: "client_project" }],
         [{ text: "🚀 Стать партнёром", callback_data: "register" }],
       ],
     },
