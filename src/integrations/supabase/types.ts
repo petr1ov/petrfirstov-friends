@@ -387,6 +387,107 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: {
+          client_name: string | null
+          commits_count: number
+          created_at: string
+          github_repo: string | null
+          id: string
+          last_commit_at: string | null
+          last_commit_message: string | null
+          name: string
+          progress: number
+          status: string
+          telegram_id: number
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string | null
+          commits_count?: number
+          created_at?: string
+          github_repo?: string | null
+          id?: string
+          last_commit_at?: string | null
+          last_commit_message?: string | null
+          name: string
+          progress?: number
+          status?: string
+          telegram_id: number
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string | null
+          commits_count?: number
+          created_at?: string
+          github_repo?: string | null
+          id?: string
+          last_commit_at?: string | null
+          last_commit_message?: string | null
+          name?: string
+          progress?: number
+          status?: string
+          telegram_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          ai_instruction: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: string
+          project_id: string
+          source_message: string | null
+          status: string
+          steps: string[]
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          ai_instruction?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          project_id: string
+          source_message?: string | null
+          status?: string
+          steps?: string[]
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_instruction?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          project_id?: string
+          source_message?: string | null
+          status?: string
+          steps?: string[]
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_actions: {
         Row: {
           action: string
