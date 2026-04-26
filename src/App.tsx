@@ -13,6 +13,8 @@ import BotUsers from "@/pages/BotUsers";
 import Analytics from "@/pages/Analytics";
 import Broadcasts from "@/pages/Broadcasts";
 import Cases from "@/pages/Cases";
+import Projects from "@/pages/Projects";
+import Tasks from "@/pages/Tasks";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/broadcasts" element={<Broadcasts />} />
               <Route path="/cases" element={<Cases />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/tasks" element={<Tasks />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

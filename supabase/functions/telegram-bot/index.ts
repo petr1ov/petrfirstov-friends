@@ -403,6 +403,7 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
         [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
         [{ text: "💰 Сколько стоит", callback_data: "pricing" }],
         [{ text: "📱 Мини-приложение", url: "https://petrfirstov.lovable.app/mini-app" }],
+        [{ text: "📊 Мой проект", callback_data: "client_project" }],
         [{ text: "🚀 Стать партнёром", callback_data: "register" }],
       ],
     },
@@ -891,6 +892,303 @@ async function handleAdminCommand(chatId: number, telegramId: number) {
   );
 }
 
+// ====== CLIENT PROJECT FLOW ======
+
+async function getClientProject(telegramId: number) {
+  const { data } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("telegram_id", telegramId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+function clientMenuKeyboard() {
+  return {
+    inline_keyboard: [
+      [{ text: "📊 Мой проект", callback_data: "client_project" }],
+      [{ text: "✏️ Отправить правку", callback_data: "client_send_edit" }],
+      [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
+      [{ text: "🚀 Идеи улучшений", callback_data: "client_ideas" }],
+      [{ text: "🔙 Главное меню", callback_data: "start" }],
+    ],
+  };
+}
+
+async function handleClientProject(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(
+      chatId,
+      `📭 У вас пока нет активных проектов.\n\nКак только Пётр заведёт ваш проект, он появится здесь.\n\n💡 Хотите заказать разработку?`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "📝 Оставить заявку", callback_data: "leave_request" }],
+            [{ text: "🔙 Главное меню", callback_data: "start" }],
+          ],
+        },
+      },
+    );
+    return;
+  }
+
+  const lastUpd = project.last_commit_at
+    ? new Date(project.last_commit_at).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })
+    : "—";
+  const lastMsg = project.last_commit_message ? `\n💬 ${project.last_commit_message}` : "";
+
+  const text = `📊 <b>Проект: ${project.name}</b>
+
+📈 Прогресс: <b>${project.progress}%</b>
+⚡ Статус: ${project.status === "active" ? "🟢 в работе" : project.status}
+🕐 Последнее обновление: ${lastUpd}${lastMsg}
+
+👇 Что хотите сделать?`;
+
+  await sendMessage(chatId, text, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "✏️ Отправить правку", callback_data: "client_send_edit" }],
+        [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
+        [{ text: "🚀 Идеи улучшений", callback_data: "client_ideas" }],
+        [{ text: "🔙 Главное меню", callback_data: "start" }],
+      ],
+    },
+  });
+}
+
+async function handleClientSendEdit(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(chatId, "📭 У вас нет активного проекта. Сначала Пётр заведёт его в системе.");
+    return;
+  }
+  await supabase.from("bot_users").update({ goal: "client_edit" }).eq("telegram_id", telegramId);
+  await sendMessage(
+    chatId,
+    `✏️ <b>Опишите правку для проекта «${project.name}»</b>\n\nНапишите свободным текстом или голосом — AI разберёт и подготовит задачу. Вы подтвердите перед отправкой в работу.\n\nНапример:\n• «Сделай кнопку зелёной и добавь оплату Stripe»\n• «На главной убери блок с ценами»`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "❌ Отмена", callback_data: "client_cancel" }]],
+      },
+    },
+  );
+}
+
+async function handleClientCancel(chatId: number, telegramId: number) {
+  await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
+  await sendMessage(chatId, "Отменено.", { reply_markup: clientMenuKeyboard() });
+}
+
+async function processClientEdit(chatId: number, telegramId: number, text: string) {
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(chatId, "📭 Проект не найден.");
+    await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
+    return;
+  }
+
+  await sendMessage(chatId, "⏳ AI разбирает вашу правку...");
+
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/parse-edit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        text,
+        project_id: project.id,
+        project_context: `Название: ${project.name}${project.github_repo ? `, репо: ${project.github_repo}` : ""}`,
+      }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      await sendMessage(chatId, `❌ ${err.error || "Не удалось обработать правку"}. Попробуйте позже.`);
+      await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
+      return;
+    }
+    const parsed = await resp.json();
+
+    // Сохраняем во временный draft через goal-стейт + поле в user_actions
+    await supabase.from("user_actions").insert({
+      telegram_id: telegramId,
+      action: "edit_draft",
+      metadata: parsed,
+    });
+    await supabase.from("bot_users").update({ goal: "client_edit_confirm" }).eq("telegram_id", telegramId);
+
+    const stepsList = (parsed.steps || []).map((s: string, i: number) => `${i + 1}. ${s}`).join("\n");
+
+    await sendMessage(
+      chatId,
+      `🤖 <b>AI подготовил задачу:</b>\n\n📝 <b>${parsed.title}</b>\n\n<b>Шаги:</b>\n${stepsList}\n\n⚡ Приоритет: ${parsed.priority}\n\nВсё верно? Отправляем в работу?`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "✅ Отправить в работу", callback_data: "client_edit_send" }],
+            [{ text: "✏️ Переписать", callback_data: "client_send_edit" }],
+            [{ text: "❌ Отменить", callback_data: "client_cancel" }],
+          ],
+        },
+      },
+    );
+  } catch (e) {
+    console.error("processClientEdit error:", e);
+    await sendMessage(chatId, "❌ Ошибка обработки. Попробуйте позже.");
+    await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
+  }
+}
+
+async function handleClientEditSend(chatId: number, telegramId: number) {
+  // Берём последний draft из user_actions
+  const { data: draftRow } = await supabase
+    .from("user_actions")
+    .select("metadata, created_at")
+    .eq("telegram_id", telegramId)
+    .eq("action", "edit_draft")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!draftRow?.metadata) {
+    await sendMessage(chatId, "❌ Черновик не найден. Опишите правку заново.");
+    return;
+  }
+
+  const draft: any = draftRow.metadata;
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(chatId, "❌ Проект не найден.");
+    return;
+  }
+
+  const { error } = await supabase.from("tasks").insert({
+    project_id: project.id,
+    title: draft.title,
+    steps: draft.steps || [],
+    ai_instruction: draft.instruction_for_lovable,
+    source_message: draft.source_message,
+    priority: draft.priority || "normal",
+    type: "edit",
+    status: "new",
+  });
+
+  if (error) {
+    console.error("create task error:", error);
+    await sendMessage(chatId, "❌ Не удалось создать задачу.");
+    return;
+  }
+
+  await supabase.from("bot_users").update({ goal: null }).eq("telegram_id", telegramId);
+
+  await sendMessage(chatId, `✅ <b>Задача создана!</b>\n\n📝 ${draft.title}\n\nВы получите уведомление, когда правка будет готова.`, {
+    reply_markup: clientMenuKeyboard(),
+  });
+
+  await sendMessage(
+    ADMIN_CHAT_ID,
+    `🆕 <b>Новая задача от клиента</b>\n\n📦 Проект: ${project.name}\n👤 От: ${telegramId}\n📝 ${draft.title}\n\nОткройте админку, чтобы взять в работу.`,
+  );
+}
+
+async function handleClientTasks(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(chatId, "📭 У вас нет проектов.");
+    return;
+  }
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("title, status, priority, created_at")
+    .eq("project_id", project.id)
+    .order("created_at", { ascending: false })
+    .limit(15);
+
+  if (!tasks || tasks.length === 0) {
+    await sendMessage(chatId, "📭 Задач пока нет.\n\nОтправьте первую правку 👇", {
+      reply_markup: clientMenuKeyboard(),
+    });
+    return;
+  }
+
+  const statusEmoji: Record<string, string> = { new: "🆕", in_progress: "⚙️", review: "👀", done: "✅" };
+  const list = tasks
+    .map((t: any) => `${statusEmoji[t.status] || "•"} <b>${t.title}</b>`)
+    .join("\n");
+
+  await sendMessage(chatId, `📋 <b>Ваши задачи (${project.name})</b>\n\n${list}`, {
+    reply_markup: clientMenuKeyboard(),
+  });
+}
+
+async function handleClientIdeas(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(chatId, "📭 У вас нет проектов.");
+    return;
+  }
+
+  await sendMessage(chatId, "⏳ AI генерирует идеи улучшений для вашего проекта...");
+
+  if (!LOVABLE_API_KEY) {
+    await sendMessage(chatId, "AI временно недоступен.");
+    return;
+  }
+
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "openai/gpt-5-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Ты — продуктовый AI-консультант. Сгенерируй 5 кратких, конкретных идей улучшений для проекта клиента. Формат HTML для Telegram: <b>...</b>. Каждая идея отдельной строкой с эмодзи и одним предложением. Без вступлений.",
+          },
+          { role: "user", content: `Проект: ${project.name}. Прогресс: ${project.progress}%.` },
+        ],
+      }),
+    });
+    const data = await resp.json();
+    let ideas = data.choices?.[0]?.message?.content || "Не удалось сгенерировать идеи.";
+    ideas = markdownToHtml(ideas);
+
+    await sendMessage(chatId, `🚀 <b>Идеи улучшений</b>\n\n${ideas}\n\n💡 Хотите добавить идею в задачи? Отправьте её через «✏️ Отправить правку».`, {
+      reply_markup: clientMenuKeyboard(),
+    });
+  } catch (e) {
+    console.error("ideas error:", e);
+    await sendMessage(chatId, "❌ Ошибка генерации.");
+  }
+}
+
+async function handleMyProjects(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (!project) {
+    await sendMessage(
+      chatId,
+      `📭 У вас пока нет активных проектов в работе.\n\n💡 Хотите заказать разработку?`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "📝 Оставить заявку", callback_data: "leave_request" }],
+            [{ text: "🔙 Главное меню", callback_data: "start" }],
+          ],
+        },
+      },
+    );
+    return;
+  }
+  await handleClientProject(chatId, telegramId);
+}
+
 // ====== MAIN HANDLER ======
 
 Deno.serve(async (req) => {
@@ -956,6 +1254,20 @@ Deno.serve(async (req) => {
       } else if (data.startsWith("event_offer_")) {
         const eventCode = data.replace("event_offer_", "");
         await handleEventOffer(chatId, telegramId, firstName, username, eventCode);
+      } else if (data === "client_menu") {
+        await sendMessage(chatId, "🏠 <b>Кабинет клиента</b>", { reply_markup: clientMenuKeyboard() });
+      } else if (data === "client_project") {
+        await handleClientProject(chatId, telegramId);
+      } else if (data === "client_send_edit") {
+        await handleClientSendEdit(chatId, telegramId);
+      } else if (data === "client_edit_send") {
+        await handleClientEditSend(chatId, telegramId);
+      } else if (data === "client_cancel") {
+        await handleClientCancel(chatId, telegramId);
+      } else if (data === "client_tasks") {
+        await handleClientTasks(chatId, telegramId);
+      } else if (data === "client_ideas") {
+        await handleClientIdeas(chatId, telegramId);
       }
 
       return new Response("OK", { headers: corsHeaders });
@@ -993,6 +1305,8 @@ Deno.serve(async (req) => {
         await handleStart(chatId, firstName, startParam);
       } else if (text === "/admin") {
         await handleAdminCommand(chatId, telegramId);
+      } else if (text === "/project" || text === "/myproject") {
+        await handleMyProjects(chatId, telegramId);
       } else if (text) {
         // Check user state
         const { data: botUser } = await supabase
@@ -1004,6 +1318,9 @@ Deno.serve(async (req) => {
         if (botUser?.goal === "register_name") {
           await trackAction(telegramId, "registration:name");
           await handleRegistrationName(chatId, telegramId, username, text);
+        } else if (botUser?.goal === "client_edit") {
+          await trackAction(telegramId, "client_edit:text", { length: text.length });
+          await processClientEdit(chatId, telegramId, text);
         } else if (botUser?.goal === "ai_chat" || !botUser?.goal) {
           await trackAction(telegramId, "ai_message", { length: text.length });
           const aiResponse = await getAIResponse(telegramId, text);
