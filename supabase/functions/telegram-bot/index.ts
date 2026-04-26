@@ -1145,7 +1145,7 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "openai/gpt-5-mini",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -1156,8 +1156,33 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
         ],
       }),
     });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error("ideas AI error:", resp.status, errText);
+      if (resp.status === 429) {
+        await sendMessage(chatId, "⏳ Слишком много запросов к AI. Попробуйте через минуту.", {
+          reply_markup: clientMenuKeyboard(),
+        });
+      } else if (resp.status === 402) {
+        await sendMessage(chatId, "💳 AI-кредиты закончились. Сообщите администратору.", {
+          reply_markup: clientMenuKeyboard(),
+        });
+      } else {
+        await sendMessage(chatId, "❌ Не удалось сгенерировать идеи. Попробуйте позже.", {
+          reply_markup: clientMenuKeyboard(),
+        });
+      }
+      return;
+    }
     const data = await resp.json();
-    let ideas = data.choices?.[0]?.message?.content || "Не удалось сгенерировать идеи.";
+    console.log("ideas AI response:", JSON.stringify(data).slice(0, 500));
+    let ideas = data.choices?.[0]?.message?.content?.trim() || "";
+    if (!ideas) {
+      await sendMessage(chatId, "❌ AI вернул пустой ответ. Попробуйте ещё раз.", {
+        reply_markup: clientMenuKeyboard(),
+      });
+      return;
+    }
     ideas = markdownToHtml(ideas);
 
     await sendMessage(chatId, `🚀 <b>Идеи улучшений</b>\n\n${ideas}\n\n💡 Хотите добавить идею в задачи? Отправьте её через «✏️ Отправить правку».`, {
@@ -1165,7 +1190,9 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
     });
   } catch (e) {
     console.error("ideas error:", e);
-    await sendMessage(chatId, "❌ Ошибка генерации.");
+    await sendMessage(chatId, "❌ Ошибка генерации идей. Попробуйте позже.", {
+      reply_markup: clientMenuKeyboard(),
+    });
   }
 }
 
