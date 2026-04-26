@@ -271,6 +271,12 @@ export default function Tasks() {
                     <p className="text-sm bg-muted/40 rounded p-2">{open.source_message}</p>
                   </div>
                 )}
+                {open.description && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Описание:</p>
+                    <p className="text-sm bg-muted/40 rounded p-2 whitespace-pre-wrap">{open.description}</p>
+                  </div>
+                )}
                 {open.steps?.length > 0 && (
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Шаги:</p>
