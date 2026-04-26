@@ -439,6 +439,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_manual: boolean
           priority: string
           project_id: string
           source_message: string | null
@@ -454,6 +455,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_manual?: boolean
           priority?: string
           project_id: string
           source_message?: string | null
@@ -469,6 +471,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_manual?: boolean
           priority?: string
           project_id?: string
           source_message?: string | null
