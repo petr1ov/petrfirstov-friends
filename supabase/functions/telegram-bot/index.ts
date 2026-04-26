@@ -1440,6 +1440,10 @@ Deno.serve(async (req) => {
         await handleClientTasks(chatId, telegramId);
       } else if (data === "client_ideas") {
         await handleClientIdeas(chatId, telegramId);
+      } else if (data.startsWith("idea_add_")) {
+        await handleIdeaAdd(chatId, telegramId, data.replace("idea_add_", ""));
+      } else if (data.startsWith("idea_copy_")) {
+        await handleIdeaCopy(chatId, telegramId, data.replace("idea_copy_", ""));
       }
 
       return new Response("OK", { headers: corsHeaders });
