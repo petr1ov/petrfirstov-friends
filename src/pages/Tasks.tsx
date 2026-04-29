@@ -446,6 +446,26 @@ export default function Tasks() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={manualDraft.type}
+              onValueChange={(v) => setManualDraft({ ...manualDraft, type: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Тип задачи" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="scope">📋 Scope (входит в MVP)</SelectItem>
+                <SelectItem value="extra">🎁 Extra (улучшение)</SelectItem>
+              </SelectContent>
+            </Select>
+            <div>
+              <label className="text-xs text-muted-foreground">Планируемая дата (опционально)</label>
+              <Input
+                type="date"
+                value={manualDraft.planned_for_date}
+                onChange={(e) => setManualDraft({ ...manualDraft, planned_for_date: e.target.value })}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setManualOpen(false)}>
