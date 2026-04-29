@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ProjectMembers } from "@/components/admin/ProjectMembers";
 
 type Project = {
   id: string;
@@ -53,11 +54,18 @@ export default function Projects() {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [scopeInput, setScopeInput] = useState("");
+  const [membersCount, setMembersCount] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   const fetchAll = async () => {
     const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
     setItems((data as Project[]) || []);
+    const { data: mem } = await supabase.from("project_members").select("project_id");
+    const counts: Record<string, number> = {};
+    (mem || []).forEach((row: any) => {
+      counts[row.project_id] = (counts[row.project_id] || 0) + 1;
+    });
+    setMembersCount(counts);
     setLoading(false);
   };
 
@@ -138,7 +146,14 @@ export default function Projects() {
                   <Badge variant={p.status === "active" ? "default" : "secondary"}>{p.status}</Badge>
                 </div>
                 {p.client_name && <p className="text-sm text-muted-foreground">{p.client_name}</p>}
-                <p className="text-xs text-muted-foreground">TG: {p.telegram_id}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span>TG: {p.telegram_id}</span>
+                  {membersCount[p.id] > 0 && (
+                    <span className="inline-flex items-center gap-1 text-primary">
+                      <Users className="h-3 w-3" /> {membersCount[p.id]}
+                    </span>
+                  )}
+                </p>
               </CardHeader>
               <CardContent className="flex-1 space-y-3">
                 {p.mvp_completed_at && (
