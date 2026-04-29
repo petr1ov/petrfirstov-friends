@@ -392,12 +392,15 @@ export type Database = {
           client_name: string | null
           commits_count: number
           created_at: string
+          description: string | null
           github_repo: string | null
           id: string
           last_commit_at: string | null
           last_commit_message: string | null
+          mvp_completed_at: string | null
           name: string
           progress: number
+          scope_features: string[]
           status: string
           telegram_id: number
           updated_at: string
@@ -406,12 +409,15 @@ export type Database = {
           client_name?: string | null
           commits_count?: number
           created_at?: string
+          description?: string | null
           github_repo?: string | null
           id?: string
           last_commit_at?: string | null
           last_commit_message?: string | null
+          mvp_completed_at?: string | null
           name: string
           progress?: number
+          scope_features?: string[]
           status?: string
           telegram_id: number
           updated_at?: string
@@ -420,12 +426,15 @@ export type Database = {
           client_name?: string | null
           commits_count?: number
           created_at?: string
+          description?: string | null
           github_repo?: string | null
           id?: string
           last_commit_at?: string | null
           last_commit_message?: string | null
+          mvp_completed_at?: string | null
           name?: string
           progress?: number
+          scope_features?: string[]
           status?: string
           telegram_id?: number
           updated_at?: string
@@ -440,6 +449,7 @@ export type Database = {
           description: string | null
           id: string
           is_manual: boolean
+          planned_for_date: string | null
           priority: string
           project_id: string
           source_message: string | null
@@ -456,6 +466,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_manual?: boolean
+          planned_for_date?: string | null
           priority?: string
           project_id: string
           source_message?: string | null
@@ -472,6 +483,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_manual?: boolean
+          planned_for_date?: string | null
           priority?: string
           project_id?: string
           source_message?: string | null
