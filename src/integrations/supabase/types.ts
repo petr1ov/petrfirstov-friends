@@ -387,6 +387,41 @@ export type Database = {
           },
         ]
       }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          project_id: string
+          role: string
+          telegram_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          project_id: string
+          role?: string
+          telegram_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          project_id?: string
+          role?: string
+          telegram_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           client_name: string | null

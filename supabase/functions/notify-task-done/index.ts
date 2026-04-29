@@ -66,15 +66,27 @@ Deno.serve(async (req) => {
 
 👀 Проверьте, всё ли как задумано!`;
 
-    await sendMessage(project.telegram_id, text, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
-          [{ text: "📊 Мой проект", callback_data: "client_project" }],
-          [{ text: "✏️ Отправить правку", callback_data: "client_send_edit" }],
-        ],
-      },
-    });
+    // Collect all members (fallback to legacy telegram_id if no members yet)
+    const { data: members } = await supabase
+      .from("project_members")
+      .select("telegram_id")
+      .eq("project_id", project.id);
+
+    const recipientIds = new Set<number>();
+    (members || []).forEach((m: any) => m?.telegram_id && recipientIds.add(Number(m.telegram_id)));
+    if (recipientIds.size === 0 && project.telegram_id) recipientIds.add(Number(project.telegram_id));
+
+    const keyboard = {
+      inline_keyboard: [
+        [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
+        [{ text: "📊 Мой проект", callback_data: "client_project" }],
+        [{ text: "✏️ Отправить правку", callback_data: "client_send_edit" }],
+      ],
+    };
+
+    for (const chatId of recipientIds) {
+      await sendMessage(chatId, text, { reply_markup: keyboard });
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

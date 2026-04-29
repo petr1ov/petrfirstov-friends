@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ProjectMembers } from "@/components/admin/ProjectMembers";
 
 type Project = {
   id: string;
@@ -53,11 +54,18 @@ export default function Projects() {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [scopeInput, setScopeInput] = useState("");
+  const [membersCount, setMembersCount] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   const fetchAll = async () => {
     const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
     setItems((data as Project[]) || []);
+    const { data: mem } = await supabase.from("project_members").select("project_id");
+    const counts: Record<string, number> = {};
+    (mem || []).forEach((row: any) => {
+      counts[row.project_id] = (counts[row.project_id] || 0) + 1;
+    });
+    setMembersCount(counts);
     setLoading(false);
   };
 
@@ -80,17 +88,33 @@ export default function Projects() {
       description: editing.description || null,
       scope_features: editing.scope_features || [],
     };
-    const { error } = editing.id
-      ? await supabase.from("projects").update(payload).eq("id", editing.id)
-      : await supabase.from("projects").insert(payload);
-    setSaving(false);
-    if (error) {
-      toast({ title: "Ошибка", description: error.message, variant: "destructive" });
-      return;
+    if (editing.id) {
+      const { error } = await supabase.from("projects").update(payload).eq("id", editing.id);
+      setSaving(false);
+      if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Проект обновлён" });
+      setEditing(null);
+      fetchAll();
+    } else {
+      const { data: created, error } = await supabase
+        .from("projects")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (!error && created?.id) {
+        await supabase.from("project_members").insert({
+          project_id: created.id,
+          telegram_id: payload.telegram_id,
+          role: "owner",
+          name: payload.client_name,
+        });
+      }
+      setSaving(false);
+      if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Проект создан" });
+      setEditing(null);
+      fetchAll();
     }
-    toast({ title: editing.id ? "Проект обновлён" : "Проект создан" });
-    setEditing(null);
-    fetchAll();
   };
 
   const remove = async (id: string) => {
@@ -138,7 +162,14 @@ export default function Projects() {
                   <Badge variant={p.status === "active" ? "default" : "secondary"}>{p.status}</Badge>
                 </div>
                 {p.client_name && <p className="text-sm text-muted-foreground">{p.client_name}</p>}
-                <p className="text-xs text-muted-foreground">TG: {p.telegram_id}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span>TG: {p.telegram_id}</span>
+                  {membersCount[p.id] > 0 && (
+                    <span className="inline-flex items-center gap-1 text-primary">
+                      <Users className="h-3 w-3" /> {membersCount[p.id]}
+                    </span>
+                  )}
+                </p>
               </CardHeader>
               <CardContent className="flex-1 space-y-3">
                 {p.mvp_completed_at && (
@@ -302,6 +333,16 @@ export default function Projects() {
                 onChange={(e) => setEditing({ ...editing!, status: e.target.value })}
               />
             </div>
+            {editing?.id && (
+              <div className="border-t border-border/40 pt-4">
+                <ProjectMembers projectId={editing.id} />
+              </div>
+            )}
+            {!editing?.id && (
+              <p className="text-xs text-muted-foreground/70 italic">
+                💡 После сохранения проекта здесь появится управление участниками (несколько Telegram ID + роли).
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditing(null)}>

@@ -895,6 +895,22 @@ async function handleAdminCommand(chatId: number, telegramId: number) {
 // ====== CLIENT PROJECT FLOW ======
 
 async function getClientProject(telegramId: number) {
+  // 1) Try via project_members (multi-user)
+  const { data: memberRow } = await supabase
+    .from("project_members")
+    .select("role, project_id, projects(*)")
+    .eq("telegram_id", telegramId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (memberRow?.projects) {
+    const proj: any = memberRow.projects;
+    proj._member_role = memberRow.role;
+    return proj;
+  }
+
+  // 2) Fallback to legacy projects.telegram_id
   const { data } = await supabase
     .from("projects")
     .select("*")
@@ -902,6 +918,7 @@ async function getClientProject(telegramId: number) {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (data) (data as any)._member_role = "owner";
   return data;
 }
 
@@ -964,6 +981,14 @@ async function handleClientSendEdit(chatId: number, telegramId: number) {
   const project = await getClientProject(telegramId);
   if (!project) {
     await sendMessage(chatId, "📭 У вас нет активного проекта. Сначала Пётр заведёт его в системе.");
+    return;
+  }
+  if ((project as any)._member_role === "viewer") {
+    await sendMessage(
+      chatId,
+      "👁 У вас роль <b>наблюдателя</b> в этом проекте — отправка правок недоступна. Обратитесь к владельцу проекта.",
+      { reply_markup: clientMenuKeyboard() },
+    );
     return;
   }
   await supabase.from("bot_users").update({ goal: "client_edit" }).eq("telegram_id", telegramId);
