@@ -40,7 +40,14 @@ type Task = {
   is_manual?: boolean;
 };
 
-type Project = { id: string; name: string; telegram_id: number };
+type Project = {
+  id: string;
+  name: string;
+  telegram_id: number;
+  progress: number;
+  mvp_completed_at: string | null;
+  scope_features: string[];
+};
 
 const STATUSES = [
   { key: "new", label: "🆕 Новые", color: "bg-blue-500/15 text-blue-300" },
@@ -65,13 +72,15 @@ export default function Tasks() {
     title: "",
     description: "",
     status: "done",
+    type: "scope",
+    planned_for_date: "",
   });
   const [manualBusy, setManualBusy] = useState(false);
   const { toast } = useToast();
 
   const fetchAll = async () => {
     const [{ data: pr }, { data: ts }] = await Promise.all([
-      supabase.from("projects").select("id, name, telegram_id").order("created_at", { ascending: false }),
+      supabase.from("projects").select("id, name, telegram_id, progress, mvp_completed_at, scope_features").order("created_at", { ascending: false }),
       supabase.from("tasks").select("*").order("created_at", { ascending: false }),
     ]);
     setProjects((pr as Project[]) || []);
@@ -118,13 +127,17 @@ export default function Tasks() {
       body: {
         text: draft.source,
         project_id: draft.project_id,
-        project_context: project ? `Название: ${project.name}` : "",
+        project_context: project
+          ? `Название: ${project.name}\nГраницы MVP: ${(project.scope_features || []).join("; ") || "не заданы"}`
+          : "",
+        scope_features: project?.scope_features || [],
       },
     });
     if (error || data?.error) {
       setAiBusy(false);
       return toast({ title: "AI ошибка", description: error?.message || data?.error, variant: "destructive" });
     }
+    const taskType = data.task_type === "extra" ? "extra" : "scope";
     const { error: insErr } = await supabase.from("tasks").insert({
       project_id: draft.project_id,
       title: data.title,
@@ -133,11 +146,14 @@ export default function Tasks() {
       source_message: draft.source,
       priority: data.priority || "normal",
       status: "new",
-      type: "edit",
+      type: taskType,
     });
     setAiBusy(false);
     if (insErr) return toast({ title: "Ошибка", description: insErr.message, variant: "destructive" });
-    toast({ title: "Задача создана через AI" });
+    toast({
+      title: "Задача создана через AI",
+      description: taskType === "extra" ? "🎁 Помечена как улучшение (вне MVP)" : "📋 Входит в MVP",
+    });
     setCreating(false);
     setDraft({ project_id: "", source: "" });
     fetchAll();
@@ -154,7 +170,8 @@ export default function Tasks() {
       description: manualDraft.description.trim() || null,
       status: manualDraft.status,
       priority: "normal",
-      type: "manual",
+      type: manualDraft.type,
+      planned_for_date: manualDraft.planned_for_date || null,
       is_manual: true,
     });
     setManualBusy(false);
@@ -175,11 +192,12 @@ export default function Tasks() {
     }
     toast({ title: "Задача создана" });
     setManualOpen(false);
-    setManualDraft({ project_id: "", title: "", description: "", status: "done" });
+    setManualDraft({ project_id: "", title: "", description: "", status: "done", type: "scope", planned_for_date: "" });
     fetchAll();
   };
 
   const grouped = STATUSES.map((s) => ({ ...s, items: filtered.filter((t) => t.status === s.key) }));
+  const activeProject = projectFilter !== "all" ? projects.find((p) => p.id === projectFilter) : null;
 
   return (
     <div className="space-y-6">
@@ -214,6 +232,19 @@ export default function Tasks() {
         </div>
       </div>
 
+      {activeProject?.mvp_completed_at && (
+        <Card className="border-emerald-500/40 bg-emerald-500/10">
+          <CardContent className="py-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-emerald-300">🎉 MVP завершён!</p>
+              <p className="text-xs text-muted-foreground">
+                Все scope-задачи выполнены. Новые задачи будут автоматически помечены как улучшения (extra).
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {loading ? (
         <p className="text-muted-foreground">Загрузка...</p>
       ) : (
@@ -236,10 +267,17 @@ export default function Tasks() {
                         <p className="text-sm font-medium line-clamp-2">{t.title}</p>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="truncate">{proj?.name || "—"}</span>
-                          <Badge variant="outline" className="ml-2 shrink-0">
-                            {t.priority}
-                          </Badge>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {t.type === "extra" ? (
+                              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">extra</Badge>
+                            ) : (
+                              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">scope</Badge>
+                            )}
+                          </div>
                         </div>
+                        {(t as any).planned_for_date && (
+                          <p className="text-[10px] text-muted-foreground">📅 {(t as any).planned_for_date}</p>
+                        )}
                       </CardContent>
                     </Card>
                   );
