@@ -88,17 +88,33 @@ export default function Projects() {
       description: editing.description || null,
       scope_features: editing.scope_features || [],
     };
-    const { error } = editing.id
-      ? await supabase.from("projects").update(payload).eq("id", editing.id)
-      : await supabase.from("projects").insert(payload);
-    setSaving(false);
-    if (error) {
-      toast({ title: "Ошибка", description: error.message, variant: "destructive" });
-      return;
+    if (editing.id) {
+      const { error } = await supabase.from("projects").update(payload).eq("id", editing.id);
+      setSaving(false);
+      if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Проект обновлён" });
+      setEditing(null);
+      fetchAll();
+    } else {
+      const { data: created, error } = await supabase
+        .from("projects")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (!error && created?.id) {
+        await supabase.from("project_members").insert({
+          project_id: created.id,
+          telegram_id: payload.telegram_id,
+          role: "owner",
+          name: payload.client_name,
+        });
+      }
+      setSaving(false);
+      if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Проект создан" });
+      setEditing(null);
+      fetchAll();
     }
-    toast({ title: editing.id ? "Проект обновлён" : "Проект создан" });
-    setEditing(null);
-    fetchAll();
   };
 
   const remove = async (id: string) => {
