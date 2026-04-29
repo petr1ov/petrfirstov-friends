@@ -317,6 +317,16 @@ export default function Projects() {
                 onChange={(e) => setEditing({ ...editing!, status: e.target.value })}
               />
             </div>
+            {editing?.id && (
+              <div className="border-t border-border/40 pt-4">
+                <ProjectMembers projectId={editing.id} />
+              </div>
+            )}
+            {!editing?.id && (
+              <p className="text-xs text-muted-foreground/70 italic">
+                💡 После сохранения проекта здесь появится управление участниками (несколько Telegram ID + роли).
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditing(null)}>
