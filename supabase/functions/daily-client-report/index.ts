@@ -77,15 +77,26 @@ Deno.serve(async (req) => {
         parts.push("");
       }
 
-      await sendMessage(p.telegram_id, parts.join("\n").trim(), {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
-            [{ text: "📊 Мой проект", callback_data: "client_project" }],
-          ],
-        },
-      });
-      sent++;
+      const { data: members } = await supabase
+        .from("project_members")
+        .select("telegram_id")
+        .eq("project_id", p.id);
+
+      const recipientIds = new Set<number>();
+      (members || []).forEach((m: any) => m?.telegram_id && recipientIds.add(Number(m.telegram_id)));
+      if (recipientIds.size === 0 && p.telegram_id) recipientIds.add(Number(p.telegram_id));
+
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: "📋 Мои задачи", callback_data: "client_tasks" }],
+          [{ text: "📊 Мой проект", callback_data: "client_project" }],
+        ],
+      };
+      const body = parts.join("\n").trim();
+      for (const chatId of recipientIds) {
+        await sendMessage(chatId, body, { reply_markup: keyboard });
+        sent++;
+      }
     }
 
     return new Response(JSON.stringify({ ok: true, sent }), {
