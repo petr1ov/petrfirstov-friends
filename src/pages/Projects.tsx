@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type Project = {
@@ -29,6 +29,9 @@ type Project = {
   last_commit_message: string | null;
   commits_count: number;
   created_at: string;
+  description: string | null;
+  scope_features: string[];
+  mvp_completed_at: string | null;
 };
 
 const empty: Partial<Project> = {
@@ -38,6 +41,8 @@ const empty: Partial<Project> = {
   github_repo: "",
   status: "active",
   progress: 0,
+  description: "",
+  scope_features: [],
 };
 
 export default function Projects() {
@@ -46,6 +51,7 @@ export default function Projects() {
   const [editing, setEditing] = useState<Partial<Project> | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [scopeInput, setScopeInput] = useState("");
   const { toast } = useToast();
 
   const fetchAll = async () => {
@@ -70,6 +76,8 @@ export default function Projects() {
       client_name: editing.client_name || null,
       github_repo: editing.github_repo || null,
       status: editing.status || "active",
+      description: editing.description || null,
+      scope_features: editing.scope_features || [],
     };
     const { error } = editing.id
       ? await supabase.from("projects").update(payload).eq("id", editing.id)
@@ -132,13 +140,23 @@ export default function Projects() {
                 <p className="text-xs text-muted-foreground">TG: {p.telegram_id}</p>
               </CardHeader>
               <CardContent className="flex-1 space-y-3">
+                {p.mvp_completed_at && (
+                  <div className="flex items-center gap-1 text-xs text-emerald-400 font-semibold">
+                    <CheckCircle2 className="h-3 w-3" /> MVP завершён
+                  </div>
+                )}
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span>Прогресс</span>
+                    <span>Прогресс MVP</span>
                     <span className="font-semibold">{p.progress}%</span>
                   </div>
                   <Progress value={p.progress} />
                 </div>
+                {p.scope_features?.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    📋 Границы MVP: {p.scope_features.length} {p.scope_features.length === 1 ? "пункт" : "пунктов"}
+                  </div>
+                )}
                 {p.github_repo && (
                   <a
                     href={p.github_repo.startsWith("http") ? p.github_repo : `https://github.com/${p.github_repo}`}
@@ -176,8 +194,8 @@ export default function Projects() {
         </div>
       )}
 
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setScopeInput(""); } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Редактировать" : "Новый проект"}</DialogTitle>
             <DialogDescription>Привяжите проект к клиенту по его Telegram ID</DialogDescription>
@@ -186,6 +204,72 @@ export default function Projects() {
             <div>
               <label className="text-xs text-muted-foreground">Название проекта</label>
               <Input value={editing?.name || ""} onChange={(e) => setEditing({ ...editing!, name: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Описание проекта</label>
+              <Textarea
+                value={editing?.description || ""}
+                onChange={(e) => setEditing({ ...editing!, description: e.target.value })}
+                placeholder="Что делает проект, его цель..."
+                className="min-h-[70px]"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Границы MVP (scope)</label>
+              <p className="text-xs text-muted-foreground/70 mb-1">
+                Список того, что входит в MVP. AI будет проверять — относится ли новая задача к scope.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={scopeInput}
+                  onChange={(e) => setScopeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && scopeInput.trim()) {
+                      e.preventDefault();
+                      setEditing({
+                        ...editing!,
+                        scope_features: [...(editing!.scope_features || []), scopeInput.trim()],
+                      });
+                      setScopeInput("");
+                    }
+                  }}
+                  placeholder="Например: Авторизация через Telegram"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (!scopeInput.trim()) return;
+                    setEditing({
+                      ...editing!,
+                      scope_features: [...(editing!.scope_features || []), scopeInput.trim()],
+                    });
+                    setScopeInput("");
+                  }}
+                >
+                  +
+                </Button>
+              </div>
+              {(editing?.scope_features || []).length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {(editing!.scope_features || []).map((f, i) => (
+                    <li key={i} className="flex items-center justify-between gap-2 text-sm bg-muted/40 rounded px-2 py-1">
+                      <span>{f}</span>
+                      <button
+                        onClick={() =>
+                          setEditing({
+                            ...editing!,
+                            scope_features: (editing!.scope_features || []).filter((_, j) => j !== i),
+                          })
+                        }
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Telegram ID клиента</label>
