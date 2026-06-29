@@ -76,13 +76,14 @@ const CalculatorQuiz = () => {
   };
 
   return (
-    <section className="py-16 px-4" id="calculator">
-      <div className="max-w-lg mx-auto">
+    <section className="py-16 px-4" id="calculator" aria-labelledby="calc-title">
+      <div className="max-w-2xl mx-auto">
         <motion.h2
+          id="calc-title"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-2xl font-bold text-center mb-2"
+          className="font-display text-3xl sm:text-4xl font-bold text-center mb-3 text-balance"
         >
           Калькулятор проекта
         </motion.h2>
@@ -90,7 +91,7 @@ const CalculatorQuiz = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-miniapp-muted text-sm text-center mb-8"
+          className="text-miniapp-foreground/65 text-sm sm:text-base text-center mb-8"
         >
           4 вопроса — и вы узнаете примерную стоимость
         </motion.p>
@@ -99,7 +100,7 @@ const CalculatorQuiz = () => {
           initial={{ y: 20, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           viewport={{ once: true }}
-          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl p-5"
+          className="rounded-2xl glass-card p-5 sm:p-6"
         >
           <AnimatePresence mode="wait">
             {!showResult ? (
@@ -111,7 +112,14 @@ const CalculatorQuiz = () => {
                 transition={{ duration: 0.25 }}
               >
                 {/* Progress */}
-                <div className="flex gap-1.5 mb-6">
+                <div
+                  className="flex gap-1.5 mb-6"
+                  role="progressbar"
+                  aria-valuenow={step + 1}
+                  aria-valuemin={1}
+                  aria-valuemax={questions.length}
+                  aria-label={`Шаг ${step + 1} из ${questions.length}`}
+                >
                   {questions.map((_, i) => (
                     <div
                       key={i}
@@ -122,17 +130,19 @@ const CalculatorQuiz = () => {
                   ))}
                 </div>
 
-                <p className="text-xs text-miniapp-muted mb-1">
+                <p className="text-xs text-miniapp-foreground/60 mb-1">
                   Вопрос {step + 1} из {questions.length}
                 </p>
-                <p className="font-semibold mb-4">{questions[step].q}</p>
+                <p className="font-display text-lg font-semibold mb-4">{questions[step].q}</p>
 
-                <div className="space-y-2">
+                <div className="space-y-2" role="radiogroup" aria-label={questions[step].q}>
                   {questions[step].options.map((opt, i) => (
                     <button
                       key={i}
+                      role="radio"
+                      aria-checked={answers[step]?.value === opt.value}
                       onClick={() => selectOption(opt)}
-                      className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all hover:scale-[1.01] active:scale-[0.99] ${
+                      className={`w-full text-left px-4 min-h-12 rounded-xl border text-sm transition-all hover:scale-[1.01] active:scale-[0.99] focus-ring ${
                         answers[step]?.value === opt.value
                           ? "border-miniapp-purple bg-miniapp-purple/10 text-white"
                           : "border-white/[0.08] bg-white/[0.02] text-miniapp-foreground hover:border-white/20"
@@ -146,9 +156,9 @@ const CalculatorQuiz = () => {
                 {step > 0 && (
                   <button
                     onClick={() => setStep(step - 1)}
-                    className="mt-4 flex items-center gap-1 text-xs text-miniapp-muted hover:text-miniapp-foreground transition-colors"
+                    className="mt-4 flex items-center gap-1 text-xs text-miniapp-foreground/60 hover:text-miniapp-foreground transition-colors focus-ring rounded px-1"
                   >
-                    <ArrowLeft className="w-3 h-3" /> Назад
+                    <ArrowLeft className="w-3 h-3" aria-hidden="true" /> Назад
                   </button>
                 )}
               </motion.div>
@@ -159,27 +169,27 @@ const CalculatorQuiz = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-center"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-miniapp-purple to-miniapp-blue flex items-center justify-center mx-auto mb-4">
-                  <Calculator className="w-6 h-6 text-white" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-miniapp-purple to-miniapp-blue flex items-center justify-center mx-auto mb-4 shadow-lg shadow-miniapp-purple/30">
+                  <Calculator className="w-6 h-6 text-white" aria-hidden="true" />
                 </div>
-                <p className="text-sm text-miniapp-muted mb-1">Примерная стоимость</p>
-                <p className="text-3xl font-extrabold bg-gradient-to-r from-miniapp-purple to-miniapp-neon bg-clip-text text-transparent mb-1">
+                <p className="text-sm text-miniapp-foreground/65 mb-1">Примерная стоимость</p>
+                <p className="font-display text-4xl font-bold bg-gradient-to-r from-miniapp-purple via-miniapp-blue to-miniapp-neon bg-clip-text text-transparent mb-1">
                   от {calcPrice().toLocaleString("ru-RU")} ₽
                 </p>
-                <p className="text-xs text-miniapp-muted mb-6">Срок: {calcWeeks()}</p>
+                <p className="text-xs text-miniapp-foreground/60 mb-6">Срок: {calcWeeks()}</p>
 
                 <div className="space-y-2">
                   <a
                     href="https://t.me/PetrFirstovBot?start=miniapp_calculator"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full py-3 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm text-center shadow-lg shadow-miniapp-purple/25"
+                    className="block w-full min-h-12 leading-[3rem] rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm text-center shadow-lg shadow-miniapp-purple/30 hover:shadow-miniapp-purple/50 transition-all focus-ring"
                   >
                     Обсудить проект
                   </a>
                   <button
                     onClick={reset}
-                    className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-miniapp-muted text-sm hover:text-white transition-colors"
+                    className="w-full min-h-12 rounded-xl bg-white/5 border border-white/10 text-miniapp-foreground/70 text-sm hover:text-white hover:bg-white/10 transition-colors focus-ring"
                   >
                     Пересчитать
                   </button>

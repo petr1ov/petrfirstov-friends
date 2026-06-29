@@ -40,13 +40,14 @@ const AIDemoSection = () => {
   };
 
   return (
-    <section className="py-16 px-4" id="ai-demo">
-      <div className="max-w-lg mx-auto">
+    <section className="py-16 px-4" id="ai-demo" aria-labelledby="ai-demo-title">
+      <div className="max-w-2xl mx-auto">
         <motion.h2
+          id="ai-demo-title"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-2xl font-bold text-center mb-2"
+          className="font-display text-3xl sm:text-4xl font-bold text-center mb-3 text-balance"
         >
           Попробуй AI
         </motion.h2>
@@ -54,7 +55,7 @@ const AIDemoSection = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-miniapp-muted text-sm text-center mb-6"
+          className="text-miniapp-foreground/65 text-sm sm:text-base text-center mb-6"
         >
           Напиши вопрос как клиент — AI ответит за эксперта
         </motion.p>
@@ -63,13 +64,13 @@ const AIDemoSection = () => {
           initial={{ y: 20, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           viewport={{ once: true }}
-          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl overflow-hidden"
+          className="rounded-2xl glass-card overflow-hidden"
         >
           {/* Chat area */}
-          <div ref={scrollRef} className="h-72 overflow-y-auto p-4 space-y-3">
+          <div ref={scrollRef} role="log" aria-live="polite" aria-label="Диалог с AI" className="h-80 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-miniapp-muted text-xs space-y-3">
-                <Bot className="w-8 h-8 opacity-30" />
+              <div className="h-full flex flex-col items-center justify-center text-miniapp-foreground/60 text-xs space-y-3">
+                <Bot className="w-8 h-8 opacity-40" aria-hidden="true" />
                 <p>Задайте вопрос, например:</p>
                 <div className="space-y-1.5">
                   {["Сколько стоит сделать бота?", "Мне нужен сайт для бизнеса", "Как AI поможет моей компании?"].map(
@@ -77,7 +78,7 @@ const AIDemoSection = () => {
                       <button
                         key={i}
                         onClick={() => { setInput(q); }}
-                        className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-miniapp-foreground text-xs"
+                        className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-miniapp-foreground text-xs focus-ring"
                       >
                         «{q}»
                       </button>
@@ -125,20 +126,23 @@ const AIDemoSection = () => {
           </div>
 
           {/* Input */}
-          <div className="border-t border-white/[0.06] p-3 flex gap-2">
+          <div className="border-t border-white/[0.08] p-3 flex gap-2">
+            <label htmlFor="ai-input" className="sr-only">Сообщение AI-ассистенту</label>
             <input
+              id="ai-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Напишите вопрос..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-miniapp-foreground placeholder:text-miniapp-muted focus:outline-none focus:border-miniapp-purple/50"
+              className="flex-1 min-h-11 bg-white/5 border border-white/10 rounded-xl px-3.5 text-sm text-miniapp-foreground placeholder:text-miniapp-foreground/45 focus:outline-none focus:border-miniapp-purple/60 focus:ring-2 focus:ring-miniapp-purple/20"
             />
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="w-9 h-9 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue flex items-center justify-center disabled:opacity-40 hover:shadow-lg hover:shadow-miniapp-purple/20 transition-all"
+              aria-label="Отправить сообщение"
+              className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-miniapp-purple/30 transition-all focus-ring"
             >
-              <Send className="w-4 h-4 text-white" />
+              <Send className="w-4 h-4 text-white" aria-hidden="true" />
             </button>
           </div>
         </motion.div>
