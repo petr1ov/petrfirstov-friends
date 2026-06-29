@@ -1,6 +1,7 @@
 import HeroSection from "@/components/miniapp/HeroSection";
 import HowItWorks from "@/components/miniapp/HowItWorks";
 import ProductsCasesSection from "@/components/miniapp/ProductsCasesSection";
+import BenefitsSection from "@/components/miniapp/BenefitsSection";
 import AIDemoSection from "@/components/miniapp/AIDemoSection";
 import CalculatorQuiz from "@/components/miniapp/CalculatorQuiz";
 import PartnerSection from "@/components/miniapp/PartnerSection";
@@ -21,6 +22,7 @@ const MiniApp = () => {
         <HeroSection />
         <HowItWorks />
         <ProductsCasesSection />
+        <BenefitsSection />
         <AIDemoSection />
         <CalculatorQuiz />
         <PartnerSection />
