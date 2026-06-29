@@ -8,39 +8,41 @@ const steps = [
 ];
 
 const HowItWorks = () => (
-  <section className="py-16 px-4">
-    <div className="max-w-lg mx-auto">
+  <section className="py-16 px-4" aria-labelledby="how-title">
+    <div className="max-w-2xl mx-auto">
       <motion.h2
+        id="how-title"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        className="text-2xl font-bold text-center mb-10"
+        className="font-display text-3xl sm:text-4xl font-bold text-center mb-3 text-balance"
       >
         Как это работает
       </motion.h2>
-      <div className="space-y-4">
+      <p className="text-center text-miniapp-foreground/65 text-sm sm:text-base mb-10">
+        Три шага — от запроса клиента до готовой заявки
+      </p>
+      <ol className="grid gap-3 sm:grid-cols-3" role="list">
         {steps.map((step, i) => (
-          <motion.div
+          <motion.li
             key={i}
-            initial={{ x: -30, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.15 }}
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm"
+            transition={{ delay: i * 0.12 }}
+            className="relative glass-card rounded-2xl p-5 hover:border-white/15 transition-colors"
           >
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center shrink-0`}>
-              <step.icon className="w-5 h-5 text-white" />
+            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-3 shadow-lg shadow-black/20`}>
+              <step.icon className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-miniapp-muted">Шаг {i + 1}</span>
-              </div>
-              <p className="font-semibold text-sm">{step.title}</p>
-              <p className="text-xs text-miniapp-muted">{step.desc}</p>
-            </div>
-          </motion.div>
+            <span className="text-[10px] uppercase tracking-wider text-miniapp-foreground/50 font-semibold">
+              Шаг {i + 1}
+            </span>
+            <p className="font-display font-semibold text-base mt-1">{step.title}</p>
+            <p className="text-sm text-miniapp-foreground/65 mt-1 leading-relaxed">{step.desc}</p>
+          </motion.li>
         ))}
-      </div>
+      </ol>
     </div>
   </section>
 );
