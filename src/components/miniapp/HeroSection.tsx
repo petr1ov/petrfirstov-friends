@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Sparkles, MessageSquare } from "lucide-react";
 import petrPhoto from "@/assets/petr-firstov.jpg";
+import FirstovLogo from "./FirstovLogo";
 
 const HeroSection = () => {
   const scrollTo = (id: string) => {
@@ -15,6 +16,15 @@ const HeroSection = () => {
       <div aria-hidden="true" className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-miniapp-neon/15 rounded-full blur-[90px] animate-aurora" style={{ animationDelay: "4s" }} />
 
       <div className="relative max-w-xl mx-auto text-center">
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="flex justify-center mb-6"
+        >
+          <FirstovLogo className="w-28 h-32 drop-shadow-[0_8px_30px_rgba(139,92,246,0.45)]" />
+        </motion.div>
+
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
