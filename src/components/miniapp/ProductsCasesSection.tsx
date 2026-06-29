@@ -1,47 +1,73 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Smartphone, Server, ChevronRight, Rocket, Calculator, ExternalLink } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Star, ExternalLink, Rocket, Calculator, ArrowRight, CheckCircle2, Layers, ImageIcon, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 
 type Case = {
   id: string;
   title: string;
   subtitle: string;
-  price: string;
+  client: string | null;
   category: string;
-  description: string;
+  task: string | null;
+  solution: string | null;
   features: string[];
+  technologies: string[];
   result: string;
-  link?: string | null;
+  budget: number | null;
+  price: string | null;
+  cover_image: string | null;
+  gallery: string[];
+  tags: string[];
+  featured: boolean;
+  link: string | null;
 };
 
-type CategoryDef = {
-  key: string;
-  icon: React.ElementType;
-  name: string;
-  price: string;
-  gradient: string;
+const categoryLabels: Record<string, string> = {
+  telegram_bot: "Telegram Bot", ai: "AI", crm: "CRM", mini_app: "Mini App",
+  pwa: "PWA", website: "Сайт", automation: "Автоматизация",
+  ai_cards: "AI-визитки", apps: "Приложения", services: "Сервисы",
 };
 
-const categoryDefs: CategoryDef[] = [
-  { key: "ai_cards", icon: CreditCard, name: "AI-визитки", price: "от 10 000 ₽", gradient: "from-miniapp-purple to-pink-500" },
-  { key: "apps", icon: Smartphone, name: "Приложения", price: "от 30 000 ₽", gradient: "from-miniapp-blue to-cyan-400" },
-  { key: "services", icon: Server, name: "Сервисы", price: "от 60 000 ₽", gradient: "from-miniapp-neon to-emerald-400" },
-];
+const formatBudget = (n: number | null, fallback: string | null) =>
+  n ? new Intl.NumberFormat("ru-RU").format(n) + " ₽" : fallback || "";
+
+// Signed URL cache
+const urlCache = new Map<string, string>();
+const useSignedUrl = (path: string | null) => {
+  const [url, setUrl] = useState<string | null>(path && urlCache.get(path) || null);
+  useEffect(() => {
+    if (!path) { setUrl(null); return; }
+    if (path.startsWith("http")) { setUrl(path); return; }
+    if (urlCache.has(path)) { setUrl(urlCache.get(path)!); return; }
+    supabase.storage.from("case-gallery").createSignedUrl(path, 60 * 60 * 24 * 7).then(({ data }) => {
+      if (data?.signedUrl) { urlCache.set(path, data.signedUrl); setUrl(data.signedUrl); }
+    });
+  }, [path]);
+  return url;
+};
+
+const SignedImg = ({ path, className, alt }: { path: string | null; className?: string; alt?: string }) => {
+  const url = useSignedUrl(path);
+  if (!url) return <div className={`bg-white/5 flex items-center justify-center ${className}`}><ImageIcon className="w-6 h-6 text-white/30" /></div>;
+  return <img src={url} className={className} alt={alt || ""} loading="lazy" />;
+};
 
 const ProductsCasesSection = () => {
-  const [activeCategory, setActiveCategory] = useState<number | null>(null);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
+  const [activeTag, setActiveTag] = useState<string>("all");
+  const [selected, setSelected] = useState<Case | null>(null);
 
   useEffect(() => {
     supabase.from("cases").select("*").order("sort_order").then(({ data }) => {
-      if (data) setCases(data as Case[]);
+      if (data) setCases(data as any as Case[]);
     });
   }, []);
 
-  const getCasesForCategory = (key: string) => cases.filter(c => c.category === key);
+  const allTags = Array.from(new Set(cases.flatMap(c => c.tags || []))).filter(Boolean);
+  const filtered = activeTag === "all" ? cases : cases.filter(c => c.tags?.includes(activeTag));
+  const sorted = [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
   const handleCTA = (action: string) => {
     const tgLink = action === "calculate"
@@ -52,112 +78,201 @@ const ProductsCasesSection = () => {
 
   return (
     <section className="py-16 px-4" id="cases" aria-labelledby="cases-title">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <motion.h2 id="cases-title" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="font-display text-3xl sm:text-4xl font-bold text-center mb-3 text-balance">
-          Продукты и кейсы
+          Портфолио
         </motion.h2>
         <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-miniapp-foreground/65 text-sm sm:text-base text-center mb-8">
-          Выберите категорию — покажем реальные проекты
+          Реальные проекты: задача клиента → решение → результат
         </motion.p>
 
-        <div className="grid grid-cols-3 gap-3 mb-6" role="tablist" aria-label="Категории продуктов">
-          {categoryDefs.map((cat, i) => (
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6 justify-center" role="tablist" aria-label="Фильтр по тегам">
+            <button onClick={() => setActiveTag("all")} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all focus-ring ${activeTag === "all" ? "bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white" : "glass-card hover:border-white/20"}`}>
+              Все
+            </button>
+            {allTags.map(tag => (
+              <button key={tag} onClick={() => setActiveTag(tag)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all focus-ring ${activeTag === tag ? "bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white" : "glass-card hover:border-white/20"}`}>
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {sorted.map((c, i) => (
             <motion.button
-              key={i}
-              role="tab"
-              aria-selected={activeCategory === i}
-              aria-controls={`cat-panel-${i}`}
+              type="button"
+              key={c.id}
               initial={{ y: 20, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              onClick={() => setActiveCategory(activeCategory === i ? null : i)}
-              className={`relative p-4 rounded-2xl border text-center transition-all focus-ring min-h-[110px] ${
-                activeCategory === i
-                  ? "bg-gradient-to-b border-white/20 shadow-lg shadow-white/5"
-                  : "glass-card hover:border-white/15"
-              }`}
-              style={activeCategory === i ? { background: `linear-gradient(to bottom, hsl(var(--miniapp-purple) / 0.15), transparent)` } : undefined}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => setSelected(c)}
+              className="text-left rounded-2xl glass-card overflow-hidden hover:border-white/20 transition-all group focus-ring"
             >
-              <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center bg-gradient-to-br ${cat.gradient} shadow-md`}>
-                <cat.icon className="w-5 h-5 text-white" aria-hidden="true" />
+              <div className="aspect-video relative overflow-hidden">
+                <SignedImg path={c.cover_image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={c.title} />
+                {c.featured && (
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-yellow-500/90 text-black text-[10px] font-bold flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-current" />Рекомендуем
+                  </div>
+                )}
+                <div className="absolute bottom-2 right-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur text-[10px] text-white">
+                  {categoryLabels[c.category] || c.category}
+                </div>
               </div>
-              <p className="font-display font-semibold text-xs mb-1">{cat.name}</p>
-              <p className="text-[10px] text-miniapp-neon font-semibold">{cat.price}</p>
+              <div className="p-4">
+                <p className="font-display font-semibold text-base mb-1 line-clamp-1">{c.title}</p>
+                <p className="text-xs text-miniapp-foreground/60 line-clamp-2 mb-3">{c.subtitle}</p>
+                {c.client && <p className="text-[11px] text-miniapp-foreground/55 mb-2">👤 {c.client}</p>}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-miniapp-neon">{formatBudget(c.budget, c.price)}</span>
+                  <span className="text-[11px] text-miniapp-foreground/55 inline-flex items-center gap-1">Подробнее <ArrowRight className="w-3 h-3" /></span>
+                </div>
+              </div>
             </motion.button>
           ))}
+          {sorted.length === 0 && (
+            <p className="text-center text-miniapp-foreground/60 text-sm py-8 col-span-full">Кейсы скоро появятся</p>
+          )}
         </div>
 
-        <AnimatePresence mode="wait">
-          {activeCategory !== null && (
-            <motion.div id={`cat-panel-${activeCategory}`} role="tabpanel" key={activeCategory} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-              <div className="space-y-3">
-                {getCasesForCategory(categoryDefs[activeCategory].key).map((c, j) => (
-                  <motion.button type="button" key={c.id} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: j * 0.1 }} onClick={() => setSelectedCase(c)} className="w-full text-left p-4 rounded-2xl glass-card hover:border-white/20 transition-all group focus-ring">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-display font-semibold text-sm">{c.title}</p>
-                        <p className="text-xs text-miniapp-foreground/60 mt-0.5">{c.subtitle}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-miniapp-foreground/50 group-hover:text-white transition-colors shrink-0" aria-hidden="true" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-miniapp-neon">{c.price}</span>
-                      <span className="text-[10px] text-miniapp-foreground/55">Подробнее →</span>
-                    </div>
-                  </motion.button>
-                ))}
-                {getCasesForCategory(categoryDefs[activeCategory].key).length === 0 && (
-                  <p className="text-center text-miniapp-foreground/60 text-sm py-4">Кейсы скоро появятся</p>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>
-          <DialogContent className="bg-[hsl(var(--miniapp-bg))] border-white/10 text-[hsl(var(--miniapp-fg))] max-w-md mx-4 max-h-[85vh] overflow-y-auto">
-            {selectedCase && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="text-lg">{selectedCase.title}</DialogTitle>
-                  <DialogDescription className="text-miniapp-muted text-sm">
-                    {selectedCase.subtitle} · <span className="text-miniapp-neon font-semibold">{selectedCase.price}</span>
-                  </DialogDescription>
-                </DialogHeader>
-                <p className="text-sm text-miniapp-muted leading-relaxed">{selectedCase.description}</p>
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-miniapp-muted uppercase tracking-wider">Что входит</p>
-                  {selectedCase.features.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-miniapp-purple shrink-0" />
-                      {f}
-                    </div>
-                  ))}
-                </div>
-                {selectedCase.link && (
-                  <a href={selectedCase.link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white text-sm font-semibold hover:bg-white/[0.1] transition-colors">
-                    <ExternalLink className="w-4 h-4" /> Посмотреть кейс
-                  </a>
-                )}
-                <div className="p-3 rounded-xl bg-miniapp-neon/5 border border-miniapp-neon/10">
-                  <p className="text-xs text-miniapp-neon">✨ {selectedCase.result}</p>
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <button onClick={() => handleCTA("calculate")} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white text-sm font-semibold">
-                    <Calculator className="w-4 h-4" /> Рассчитать проект
-                  </button>
-                  <button onClick={() => handleCTA("want_same")} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-miniapp-neon/10 border border-miniapp-neon/20 text-miniapp-neon text-sm font-semibold">
-                    <Rocket className="w-4 h-4" /> Хочу такой же
-                  </button>
-                </div>
-              </>
-            )}
+        <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+          <DialogContent className="bg-[hsl(var(--miniapp-bg))] border-white/10 text-[hsl(var(--miniapp-fg))] max-w-2xl mx-4 max-h-[90vh] overflow-y-auto p-0">
+            {selected && <CaseView c={selected} onCTA={handleCTA} />}
           </DialogContent>
         </Dialog>
       </div>
     </section>
   );
 };
+
+const CaseView = ({ c, onCTA }: { c: Case; onCTA: (a: string) => void }) => {
+  return (
+    <div>
+      {/* Cover */}
+      <div className="aspect-video w-full relative overflow-hidden rounded-t-lg">
+        <SignedImg path={c.cover_image} className="w-full h-full object-cover" alt={c.title} />
+        {c.featured && (
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-yellow-500/90 text-black text-xs font-bold flex items-center gap-1">
+            <Star className="w-3 h-3 fill-current" />Рекомендуем
+          </div>
+        )}
+      </div>
+
+      <div className="p-6 space-y-6">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl text-balance">{c.title}</DialogTitle>
+          {c.subtitle && <p className="text-sm text-miniapp-foreground/70 mt-1">{c.subtitle}</p>}
+        </DialogHeader>
+
+        {/* Meta */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+          {c.client && (
+            <div className="glass-card rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-miniapp-foreground/50 mb-1">Клиент</p>
+              <p className="font-medium">{c.client}</p>
+            </div>
+          )}
+          <div className="glass-card rounded-xl p-3">
+            <p className="text-[10px] uppercase tracking-wider text-miniapp-foreground/50 mb-1">Категория</p>
+            <p className="font-medium">{categoryLabels[c.category] || c.category}</p>
+          </div>
+          {(c.budget || c.price) && (
+            <div className="glass-card rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-miniapp-foreground/50 mb-1">Бюджет</p>
+              <p className="font-bold text-miniapp-neon">{formatBudget(c.budget, c.price)}</p>
+            </div>
+          )}
+        </div>
+
+        {c.task && (
+          <Block title="Задача клиента" emoji="🎯">
+            <p className="text-sm text-miniapp-foreground/80 leading-relaxed whitespace-pre-line">{c.task}</p>
+          </Block>
+        )}
+
+        {c.solution && (
+          <Block title="Решение" emoji="💡">
+            <p className="text-sm text-miniapp-foreground/80 leading-relaxed whitespace-pre-line">{c.solution}</p>
+          </Block>
+        )}
+
+        {c.features?.length > 0 && (
+          <Block title="Основной функционал" emoji="⚙️">
+            <div className="grid sm:grid-cols-2 gap-2">
+              {c.features.map((f, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-miniapp-neon shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </div>
+              ))}
+            </div>
+          </Block>
+        )}
+
+        {c.technologies?.length > 0 && (
+          <Block title="Технологии" emoji="🧩">
+            <div className="flex flex-wrap gap-2">
+              {c.technologies.map((t, i) => (
+                <span key={i} className="px-2.5 py-1 rounded-full glass-card text-xs font-medium inline-flex items-center gap-1">
+                  <Layers className="w-3 h-3 text-miniapp-purple" />{t}
+                </span>
+              ))}
+            </div>
+          </Block>
+        )}
+
+        {c.result && (
+          <div className="p-4 rounded-xl bg-gradient-to-br from-miniapp-neon/10 to-miniapp-blue/10 border border-miniapp-neon/20">
+            <p className="text-[10px] uppercase tracking-wider text-miniapp-neon mb-2 font-bold">✨ Результат</p>
+            <p className="text-sm leading-relaxed whitespace-pre-line">{c.result}</p>
+          </div>
+        )}
+
+        {c.gallery?.length > 0 && (
+          <Block title="Галерея" emoji="🖼">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {c.gallery.map((path, i) => (
+                <div key={i} className="aspect-square rounded-lg overflow-hidden glass-card">
+                  <SignedImg path={path} className="w-full h-full object-cover hover:scale-110 transition-transform" />
+                </div>
+              ))}
+            </div>
+          </Block>
+        )}
+
+        {c.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {c.tags.map(t => <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-miniapp-foreground/70">#{t}</span>)}
+          </div>
+        )}
+
+        {c.link && (
+          <a href={c.link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 rounded-xl glass-card hover:border-white/20 text-sm font-semibold transition-all">
+            <ExternalLink className="w-4 h-4" /> Посмотреть проект
+          </a>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
+          <button onClick={() => onCTA("calculate")} className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white text-sm font-semibold">
+            <Calculator className="w-4 h-4" /> Рассчитать проект
+          </button>
+          <button onClick={() => onCTA("want_same")} className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-miniapp-neon/10 border border-miniapp-neon/30 text-miniapp-neon text-sm font-semibold">
+            <Rocket className="w-4 h-4" /> Хочу такой же
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Block = ({ title, emoji, children }: { title: string; emoji: string; children: React.ReactNode }) => (
+  <div>
+    <p className="text-[10px] uppercase tracking-wider text-miniapp-foreground/50 mb-2 font-bold">{emoji} {title}</p>
+    {children}
+  </div>
+);
 
 export default ProductsCasesSection;

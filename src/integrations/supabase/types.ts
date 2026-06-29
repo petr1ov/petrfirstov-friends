@@ -195,42 +195,69 @@ export type Database = {
       }
       cases: {
         Row: {
+          budget: number | null
           category: string
+          client: string | null
+          cover_image: string | null
           created_at: string
           description: string
+          featured: boolean
           features: string[]
+          gallery: string[]
           id: string
           link: string | null
           price: string
           result: string
+          solution: string | null
           sort_order: number
           subtitle: string
+          tags: string[]
+          task: string | null
+          technologies: string[]
           title: string
         }
         Insert: {
+          budget?: number | null
           category?: string
+          client?: string | null
+          cover_image?: string | null
           created_at?: string
           description?: string
+          featured?: boolean
           features?: string[]
+          gallery?: string[]
           id?: string
           link?: string | null
           price?: string
           result?: string
+          solution?: string | null
           sort_order?: number
           subtitle?: string
+          tags?: string[]
+          task?: string | null
+          technologies?: string[]
           title: string
         }
         Update: {
+          budget?: number | null
           category?: string
+          client?: string | null
+          cover_image?: string | null
           created_at?: string
           description?: string
+          featured?: boolean
           features?: string[]
+          gallery?: string[]
           id?: string
           link?: string | null
           price?: string
           result?: string
+          solution?: string | null
           sort_order?: number
           subtitle?: string
+          tags?: string[]
+          task?: string | null
+          technologies?: string[]
           title?: string
         }
         Relationships: []
