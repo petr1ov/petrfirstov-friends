@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import HeroSection from "@/components/miniapp/HeroSection";
 import HowItWorks from "@/components/miniapp/HowItWorks";
 import ProductsCasesSection from "@/components/miniapp/ProductsCasesSection";
@@ -11,15 +9,23 @@ import MiniAppNav from "@/components/miniapp/MiniAppNav";
 
 const MiniApp = () => {
   return (
-    <div className="min-h-screen bg-miniapp text-miniapp-foreground overflow-x-hidden">
+    <div className="min-h-dvh aurora-bg text-miniapp-foreground overflow-x-hidden font-sans antialiased">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-lg focus:bg-miniapp-purple focus:text-white"
+      >
+        К содержимому
+      </a>
       <MiniAppNav />
-      <HeroSection />
-      <HowItWorks />
-      <ProductsCasesSection />
-      <AIDemoSection />
-      <CalculatorQuiz />
-      <PartnerSection />
-      <CTASection />
+      <main id="main">
+        <HeroSection />
+        <HowItWorks />
+        <ProductsCasesSection />
+        <AIDemoSection />
+        <CalculatorQuiz />
+        <PartnerSection />
+        <CTASection />
+      </main>
     </div>
   );
 };
