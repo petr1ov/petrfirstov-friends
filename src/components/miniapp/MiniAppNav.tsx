@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bot } from "lucide-react";
+import FirstovLogo from "./FirstovLogo";
 
 const MiniAppNav = () => {
   return (
@@ -11,10 +11,10 @@ const MiniAppNav = () => {
     >
       <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
         <a href="#main" className="flex items-center gap-2 focus-ring rounded-lg" aria-label="На главную">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-miniapp-purple to-miniapp-blue flex items-center justify-center shadow-lg shadow-miniapp-purple/30">
-            <Bot className="w-4 h-4 text-white" aria-hidden="true" />
-          </div>
-          <span className="font-display font-semibold text-sm tracking-tight">Пётр Фирстов</span>
+          <FirstovLogo className="w-9 h-9" />
+          <span className="font-display font-bold text-sm tracking-[0.14em] bg-gradient-to-r from-miniapp-blue to-miniapp-purple bg-clip-text text-transparent">
+            FIRSTOV.AI
+          </span>
         </a>
         <a
           href="https://t.me/PetrFirstovBot?start=miniapp_contact"
