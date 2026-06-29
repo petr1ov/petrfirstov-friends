@@ -138,5 +138,4 @@
     50% { opacity: 0.8; transform: translate3d(0,-10px,0) scale(1.05); }
   }
   .animate-aurora { animation: aurora-pulse 8s ease-in-out infinite; }
-  }
 }
