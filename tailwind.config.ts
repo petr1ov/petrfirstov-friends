@@ -64,7 +64,13 @@ export default {
           purple: "hsl(var(--miniapp-purple))",
           blue: "hsl(var(--miniapp-blue))",
           neon: "hsl(var(--miniapp-neon))",
+          surface: "hsl(var(--miniapp-surface))",
+          border: "hsl(var(--miniapp-border))",
         },
+      },
+      fontFamily: {
+        display: ["'Space Grotesk'", "system-ui", "sans-serif"],
+        sans: ["'DM Sans'", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
