@@ -51,61 +51,64 @@ const ProductsCasesSection = () => {
   };
 
   return (
-    <section className="py-16 px-4" id="cases">
-      <div className="max-w-lg mx-auto">
-        <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-2xl font-bold text-center mb-2">
+    <section className="py-16 px-4" id="cases" aria-labelledby="cases-title">
+      <div className="max-w-2xl mx-auto">
+        <motion.h2 id="cases-title" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="font-display text-3xl sm:text-4xl font-bold text-center mb-3 text-balance">
           Продукты и кейсы
         </motion.h2>
-        <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-miniapp-muted text-sm text-center mb-8">
+        <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-miniapp-foreground/65 text-sm sm:text-base text-center mb-8">
           Выберите категорию — покажем реальные проекты
         </motion.p>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6" role="tablist" aria-label="Категории продуктов">
           {categoryDefs.map((cat, i) => (
             <motion.button
               key={i}
+              role="tab"
+              aria-selected={activeCategory === i}
+              aria-controls={`cat-panel-${i}`}
               initial={{ y: 20, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               onClick={() => setActiveCategory(activeCategory === i ? null : i)}
-              className={`relative p-4 rounded-2xl border text-center transition-all ${
+              className={`relative p-4 rounded-2xl border text-center transition-all focus-ring min-h-[110px] ${
                 activeCategory === i
                   ? "bg-gradient-to-b border-white/20 shadow-lg shadow-white/5"
-                  : "bg-white/[0.03] border-white/[0.06] hover:border-white/[0.12]"
+                  : "glass-card hover:border-white/15"
               }`}
               style={activeCategory === i ? { background: `linear-gradient(to bottom, hsl(var(--miniapp-purple) / 0.15), transparent)` } : undefined}
             >
-              <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center bg-gradient-to-br ${cat.gradient}`}>
-                <cat.icon className="w-5 h-5 text-white" />
+              <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center bg-gradient-to-br ${cat.gradient} shadow-md`}>
+                <cat.icon className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
-              <p className="font-semibold text-xs mb-0.5">{cat.name}</p>
-              <p className="text-[10px] text-miniapp-neon font-bold">{cat.price}</p>
+              <p className="font-display font-semibold text-xs mb-1">{cat.name}</p>
+              <p className="text-[10px] text-miniapp-neon font-semibold">{cat.price}</p>
             </motion.button>
           ))}
         </div>
 
         <AnimatePresence mode="wait">
           {activeCategory !== null && (
-            <motion.div key={activeCategory} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+            <motion.div id={`cat-panel-${activeCategory}`} role="tabpanel" key={activeCategory} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
               <div className="space-y-3">
                 {getCasesForCategory(categoryDefs[activeCategory].key).map((c, j) => (
-                  <motion.div key={c.id} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: j * 0.1 }} onClick={() => setSelectedCase(c)} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:border-white/[0.15] transition-all group">
+                  <motion.button type="button" key={c.id} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: j * 0.1 }} onClick={() => setSelectedCase(c)} className="w-full text-left p-4 rounded-2xl glass-card hover:border-white/20 transition-all group focus-ring">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-sm">{c.title}</p>
-                        <p className="text-xs text-miniapp-muted">{c.subtitle}</p>
+                        <p className="font-display font-semibold text-sm">{c.title}</p>
+                        <p className="text-xs text-miniapp-foreground/60 mt-0.5">{c.subtitle}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-miniapp-muted group-hover:text-white transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-miniapp-foreground/50 group-hover:text-white transition-colors shrink-0" aria-hidden="true" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-miniapp-neon">{c.price}</span>
-                      <span className="text-[10px] text-miniapp-muted">Подробнее →</span>
+                      <span className="text-xs font-semibold text-miniapp-neon">{c.price}</span>
+                      <span className="text-[10px] text-miniapp-foreground/55">Подробнее →</span>
                     </div>
-                  </motion.div>
+                  </motion.button>
                 ))}
                 {getCasesForCategory(categoryDefs[activeCategory].key).length === 0 && (
-                  <p className="text-center text-miniapp-muted text-sm py-4">Кейсы скоро появятся</p>
+                  <p className="text-center text-miniapp-foreground/60 text-sm py-4">Кейсы скоро появятся</p>
                 )}
               </div>
             </motion.div>
