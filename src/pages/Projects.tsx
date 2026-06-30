@@ -108,6 +108,12 @@ export default function Projects() {
           role: "owner",
           name: payload.client_name,
         });
+        // Onboarding-сообщение владельцу в Telegram
+        supabase.functions
+          .invoke("notify-client-onboarding", {
+            body: { project_id: created.id, telegram_id: payload.telegram_id, role: "owner" },
+          })
+          .catch((e) => console.error("onboarding invoke failed", e));
       }
       setSaving(false);
       if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
