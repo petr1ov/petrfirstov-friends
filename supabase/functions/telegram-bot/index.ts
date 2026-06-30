@@ -1147,12 +1147,36 @@ async function handleClientTasks(chatId: number, telegramId: number) {
     return;
   }
 
-  const statusEmoji: Record<string, string> = { new: "🆕", in_progress: "⚙️", review: "👀", done: "✅" };
-  const list = tasks
-    .map((t: any) => `${statusEmoji[t.status] || "•"} <b>${t.title}</b>`)
-    .join("\n");
+  const statusMeta: Record<string, { emoji: string; label: string }> = {
+    new: { emoji: "🆕", label: "Принята" },
+    in_progress: { emoji: "⚙️", label: "В работе" },
+    review: { emoji: "👀", label: "На проверке" },
+    done: { emoji: "✅", label: "Готово" },
+  };
+  const order = ["in_progress", "review", "new", "done"];
+  const groups: Record<string, any[]> = {};
+  for (const t of tasks as any[]) {
+    (groups[t.status] ||= []).push(t);
+  }
 
-  await sendMessage(chatId, `📋 <b>Ваши задачи (${project.name})</b>\n\n${list}`, {
+  const blocks: string[] = [];
+  for (const status of order) {
+    const arr = groups[status];
+    if (!arr?.length) continue;
+    const meta = statusMeta[status] || { emoji: "•", label: status };
+    const lines = arr
+      .map((t: any) => {
+        const d = new Date(t.created_at).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+        const pr = t.priority === "high" ? " 🔥" : t.priority === "low" ? " 🌱" : "";
+        return `  • ${escapeHtml(t.title)}${pr} <i>(${d})</i>`;
+      })
+      .join("\n");
+    blocks.push(`${meta.emoji} <b>${meta.label}</b> (${arr.length})\n${lines}`);
+  }
+
+  const legend = `\n\n<i>🆕 принята · ⚙️ в работе · 👀 на проверке · ✅ готово · 🔥 высокий приоритет</i>`;
+
+  await sendMessage(chatId, `📋 <b>Ваши задачи — ${escapeHtml(project.name)}</b>\n\n${blocks.join("\n\n")}${legend}`, {
     reply_markup: clientMenuKeyboard(),
   });
 }
