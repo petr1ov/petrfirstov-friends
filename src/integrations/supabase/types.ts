@@ -459,6 +459,7 @@ export type Database = {
           id: string
           last_commit_at: string | null
           last_commit_message: string | null
+          lovable_project_id: string | null
           mvp_completed_at: string | null
           name: string
           progress: number
@@ -476,6 +477,7 @@ export type Database = {
           id?: string
           last_commit_at?: string | null
           last_commit_message?: string | null
+          lovable_project_id?: string | null
           mvp_completed_at?: string | null
           name: string
           progress?: number
@@ -493,6 +495,7 @@ export type Database = {
           id?: string
           last_commit_at?: string | null
           last_commit_message?: string | null
+          lovable_project_id?: string | null
           mvp_completed_at?: string | null
           name?: string
           progress?: number
