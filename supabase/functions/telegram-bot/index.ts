@@ -956,12 +956,18 @@ async function handleClientProject(chatId: number, telegramId: number) {
     ? new Date(project.last_commit_at).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })
     : "—";
   const lastMsg = project.last_commit_message ? `\n💬 ${project.last_commit_message}` : "";
+  const scope = (project.scope_features || []) as string[];
+  const scopeBlock = scope.length
+    ? `\n\n📋 <b>Границы MVP:</b>\n${scope.slice(0, 6).map((s: string) => `• ${escapeHtml(s)}`).join("\n")}${scope.length > 6 ? `\n…ещё ${scope.length - 6}` : ""}`
+    : "";
+  const role = (project as any)._member_role;
+  const roleLine = role === "viewer" ? "\n👁 Ваша роль: наблюдатель" : "";
 
-  const text = `📊 <b>Проект: ${project.name}</b>
+  const text = `📊 <b>Проект: ${escapeHtml(project.name)}</b>
 
-📈 Прогресс: <b>${project.progress}%</b>
+📈 Прогресс MVP: <b>${project.progress}%</b>
 ⚡ Статус: ${project.status === "active" ? "🟢 в работе" : project.status}
-🕐 Последнее обновление: ${lastUpd}${lastMsg}
+🕐 Последнее обновление: ${lastUpd}${lastMsg}${roleLine}${scopeBlock}
 
 👇 Что хотите сделать?`;
 
@@ -1141,12 +1147,36 @@ async function handleClientTasks(chatId: number, telegramId: number) {
     return;
   }
 
-  const statusEmoji: Record<string, string> = { new: "🆕", in_progress: "⚙️", review: "👀", done: "✅" };
-  const list = tasks
-    .map((t: any) => `${statusEmoji[t.status] || "•"} <b>${t.title}</b>`)
-    .join("\n");
+  const statusMeta: Record<string, { emoji: string; label: string }> = {
+    new: { emoji: "🆕", label: "Принята" },
+    in_progress: { emoji: "⚙️", label: "В работе" },
+    review: { emoji: "👀", label: "На проверке" },
+    done: { emoji: "✅", label: "Готово" },
+  };
+  const order = ["in_progress", "review", "new", "done"];
+  const groups: Record<string, any[]> = {};
+  for (const t of tasks as any[]) {
+    (groups[t.status] ||= []).push(t);
+  }
 
-  await sendMessage(chatId, `📋 <b>Ваши задачи (${project.name})</b>\n\n${list}`, {
+  const blocks: string[] = [];
+  for (const status of order) {
+    const arr = groups[status];
+    if (!arr?.length) continue;
+    const meta = statusMeta[status] || { emoji: "•", label: status };
+    const lines = arr
+      .map((t: any) => {
+        const d = new Date(t.created_at).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+        const pr = t.priority === "high" ? " 🔥" : t.priority === "low" ? " 🌱" : "";
+        return `  • ${escapeHtml(t.title)}${pr} <i>(${d})</i>`;
+      })
+      .join("\n");
+    blocks.push(`${meta.emoji} <b>${meta.label}</b> (${arr.length})\n${lines}`);
+  }
+
+  const legend = `\n\n<i>🆕 принята · ⚙️ в работе · 👀 на проверке · ✅ готово · 🔥 высокий приоритет</i>`;
+
+  await sendMessage(chatId, `📋 <b>Ваши задачи — ${escapeHtml(project.name)}</b>\n\n${blocks.join("\n\n")}${legend}`, {
     reply_markup: clientMenuKeyboard(),
   });
 }
@@ -1308,6 +1338,54 @@ async function handleClientIdeas(chatId: number, telegramId: number) {
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function handleHelp(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (project) {
+    const canEdit = (project as any)._member_role !== "viewer";
+    const text = `❓ <b>Подсказка по работе с проектом «${escapeHtml(project.name)}»</b>
+
+<b>Что вы можете делать прямо здесь:</b>
+
+📊 <b>Мой проект</b> — прогресс, последние обновления, границы MVP.
+${canEdit ? `✏️ <b>Отправить правку</b> — опишите текстом или голосом. AI разберёт → покажет «правильно ли понял?» → вы подтверждаете → задача уходит в работу.\n` : ""}📋 <b>Мои задачи</b> — статусы: 🆕 принята · ⚙️ в работе · 👀 на проверке · ✅ готово.
+🚀 <b>Идеи улучшений</b> — AI подскажет, что ещё добавить.
+
+💬 Можно просто писать в чат — AI-ассистент ответит.
+🎙 Голосовые сообщения тоже понимаю.
+🔔 О готовых правках и ежедневной сводке узнаете автоматически.
+
+<b>Команды:</b>
+/start — главное меню
+/project — кабинет проекта
+/help — эта подсказка`;
+
+    await sendMessage(chatId, text, { reply_markup: clientMenuKeyboard() });
+    return;
+  }
+
+  await sendMessage(
+    chatId,
+    `❓ <b>Подсказка</b>
+
+Я — бот Петра Фирстова. Здесь можно:
+
+🔍 Посмотреть кейсы и услуги
+🤖 Попробовать AI-ассистента
+💬 Задать любой вопрос — AI ответит
+📝 Оставить заявку
+
+<b>Команды:</b>
+/start — главное меню
+/project — кабинет клиента (если у вас есть проект)
+/help — эта подсказка`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔙 Главное меню", callback_data: "start" }]],
+      },
+    },
+  );
 }
 
 async function findIdeaByShortId(shortId: string, telegramId: number) {
@@ -1509,6 +1587,9 @@ Deno.serve(async (req) => {
         await handleAdminCommand(chatId, telegramId);
       } else if (text === "/project" || text === "/myproject") {
         await handleMyProjects(chatId, telegramId);
+      } else if (text === "/help") {
+        await trackAction(telegramId, "command:help");
+        await handleHelp(chatId, telegramId);
       } else if (text) {
         // Check user state
         const { data: botUser } = await supabase

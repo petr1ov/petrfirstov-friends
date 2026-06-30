@@ -70,6 +70,22 @@ export function ProjectMembers({ projectId }: { projectId: string }) {
         variant: "destructive",
       });
     }
+    // Пушим клиенту приветственное сообщение в бот
+    supabase.functions
+      .invoke("notify-client-onboarding", {
+        body: { project_id: projectId, telegram_id: id, role },
+      })
+      .then(({ data }) => {
+        if (data?.delivered) {
+          toast({ title: "Участник добавлен", description: "Отправил приветствие в Telegram" });
+        } else {
+          toast({
+            title: "Участник добавлен",
+            description: "Не удалось доставить приветствие (возможно, он ещё не запускал бота /start)",
+          });
+        }
+      })
+      .catch((e) => console.error("onboarding invoke failed", e));
     setTgId("");
     setName("");
     setRole("client");
