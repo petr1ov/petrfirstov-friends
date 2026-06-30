@@ -1340,6 +1340,54 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+async function handleHelp(chatId: number, telegramId: number) {
+  const project = await getClientProject(telegramId);
+  if (project) {
+    const canEdit = (project as any)._member_role !== "viewer";
+    const text = `❓ <b>Подсказка по работе с проектом «${escapeHtml(project.name)}»</b>
+
+<b>Что вы можете делать прямо здесь:</b>
+
+📊 <b>Мой проект</b> — прогресс, последние обновления, границы MVP.
+${canEdit ? `✏️ <b>Отправить правку</b> — опишите текстом или голосом. AI разберёт → покажет «правильно ли понял?» → вы подтверждаете → задача уходит в работу.\n` : ""}📋 <b>Мои задачи</b> — статусы: 🆕 принята · ⚙️ в работе · 👀 на проверке · ✅ готово.
+🚀 <b>Идеи улучшений</b> — AI подскажет, что ещё добавить.
+
+💬 Можно просто писать в чат — AI-ассистент ответит.
+🎙 Голосовые сообщения тоже понимаю.
+🔔 О готовых правках и ежедневной сводке узнаете автоматически.
+
+<b>Команды:</b>
+/start — главное меню
+/project — кабинет проекта
+/help — эта подсказка`;
+
+    await sendMessage(chatId, text, { reply_markup: clientMenuKeyboard() });
+    return;
+  }
+
+  await sendMessage(
+    chatId,
+    `❓ <b>Подсказка</b>
+
+Я — бот Петра Фирстова. Здесь можно:
+
+🔍 Посмотреть кейсы и услуги
+🤖 Попробовать AI-ассистента
+💬 Задать любой вопрос — AI ответит
+📝 Оставить заявку
+
+<b>Команды:</b>
+/start — главное меню
+/project — кабинет клиента (если у вас есть проект)
+/help — эта подсказка`,
+    {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔙 Главное меню", callback_data: "start" }]],
+      },
+    },
+  );
+}
+
 async function findIdeaByShortId(shortId: string, telegramId: number) {
   const { data } = await supabase
     .from("user_actions")
