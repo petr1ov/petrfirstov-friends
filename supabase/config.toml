@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.sync-github]
 verify_jwt = false
+
+[functions.notify-client-onboarding]
+verify_jwt = false
