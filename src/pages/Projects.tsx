@@ -34,6 +34,7 @@ type Project = {
   description: string | null;
   scope_features: string[];
   mvp_completed_at: string | null;
+  lovable_project_id: string | null;
 };
 
 const empty: Partial<Project> = {
@@ -45,6 +46,7 @@ const empty: Partial<Project> = {
   progress: 0,
   description: "",
   scope_features: [],
+  lovable_project_id: "",
 };
 
 export default function Projects() {
@@ -87,6 +89,7 @@ export default function Projects() {
       status: editing.status || "active",
       description: editing.description || null,
       scope_features: editing.scope_features || [],
+      lovable_project_id: editing.lovable_project_id || null,
     };
     if (editing.id) {
       const { error } = await supabase.from("projects").update(payload).eq("id", editing.id);
@@ -330,6 +333,17 @@ export default function Projects() {
                 value={editing?.github_repo || ""}
                 onChange={(e) => setEditing({ ...editing!, github_repo: e.target.value })}
                 placeholder="petrfirstov/my-app"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Lovable Project ID</label>
+              <p className="text-xs text-muted-foreground/70 mb-1">
+                ID из URL Lovable-проекта (lovable.dev/projects/<b>xxxxx</b>). Нужен для webhook-уведомлений о деплоях.
+              </p>
+              <Input
+                value={editing?.lovable_project_id || ""}
+                onChange={(e) => setEditing({ ...editing!, lovable_project_id: e.target.value })}
+                placeholder="f6375b1a-2635-43c0-91e1-42df9d942106"
               />
             </div>
             <div>

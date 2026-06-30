@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.notify-client-onboarding]
 verify_jwt = false
+
+[functions.lovable-webhook]
+verify_jwt = false
