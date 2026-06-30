@@ -956,12 +956,18 @@ async function handleClientProject(chatId: number, telegramId: number) {
     ? new Date(project.last_commit_at).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })
     : "—";
   const lastMsg = project.last_commit_message ? `\n💬 ${project.last_commit_message}` : "";
+  const scope = (project.scope_features || []) as string[];
+  const scopeBlock = scope.length
+    ? `\n\n📋 <b>Границы MVP:</b>\n${scope.slice(0, 6).map((s: string) => `• ${escapeHtml(s)}`).join("\n")}${scope.length > 6 ? `\n…ещё ${scope.length - 6}` : ""}`
+    : "";
+  const role = (project as any)._member_role;
+  const roleLine = role === "viewer" ? "\n👁 Ваша роль: наблюдатель" : "";
 
-  const text = `📊 <b>Проект: ${project.name}</b>
+  const text = `📊 <b>Проект: ${escapeHtml(project.name)}</b>
 
-📈 Прогресс: <b>${project.progress}%</b>
+📈 Прогресс MVP: <b>${project.progress}%</b>
 ⚡ Статус: ${project.status === "active" ? "🟢 в работе" : project.status}
-🕐 Последнее обновление: ${lastUpd}${lastMsg}
+🕐 Последнее обновление: ${lastUpd}${lastMsg}${roleLine}${scopeBlock}
 
 👇 Что хотите сделать?`;
 
