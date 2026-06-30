@@ -1539,6 +1539,9 @@ Deno.serve(async (req) => {
         await handleAdminCommand(chatId, telegramId);
       } else if (text === "/project" || text === "/myproject") {
         await handleMyProjects(chatId, telegramId);
+      } else if (text === "/help") {
+        await trackAction(telegramId, "command:help");
+        await handleHelp(chatId, telegramId);
       } else if (text) {
         // Check user state
         const { data: botUser } = await supabase
