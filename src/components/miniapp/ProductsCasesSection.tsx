@@ -111,24 +111,23 @@ const ProductsCasesSection = () => {
               onClick={() => setSelected(c)}
               className="text-left rounded-2xl glass-card overflow-hidden hover:border-white/20 transition-all group focus-ring"
             >
-              <div className="aspect-video relative overflow-hidden">
+              <div className="aspect-square relative overflow-hidden">
                 <SignedImg path={c.cover_image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={c.title} />
                 {c.featured && (
-                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-yellow-500/90 text-black text-[10px] font-bold flex items-center gap-1">
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-yellow-500/90 text-black text-[10px] font-bold flex items-center gap-1 z-10">
                     <Star className="w-3 h-3 fill-current" />Рекомендуем
                   </div>
                 )}
-                <div className="absolute bottom-2 right-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur text-[10px] text-white">
+                <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur text-[10px] text-white z-10">
                   {categoryLabels[c.category] || c.category}
                 </div>
-              </div>
-              <div className="p-4">
-                <p className="font-display font-semibold text-base mb-1 line-clamp-1">{c.title}</p>
-                <p className="text-xs text-miniapp-foreground/60 line-clamp-2 mb-3">{c.subtitle}</p>
-                {c.client && <p className="text-[11px] text-miniapp-foreground/55 mb-2">👤 {c.client}</p>}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-miniapp-neon">{formatBudget(c.budget, c.price)}</span>
-                  <span className="text-[11px] text-miniapp-foreground/55 inline-flex items-center gap-1">Подробнее <ArrowRight className="w-3 h-3" /></span>
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-black/55 backdrop-blur-md border-t border-white/10">
+                  <p className="font-display font-semibold text-sm sm:text-base text-white line-clamp-1">{c.title}</p>
+                  {c.subtitle && <p className="text-[11px] text-white/75 line-clamp-1 mt-0.5">{c.subtitle}</p>}
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-[11px] font-bold text-miniapp-neon">{formatBudget(c.budget, c.price)}</span>
+                    <span className="text-[10px] text-white/70 inline-flex items-center gap-1">Подробнее <ArrowRight className="w-3 h-3" /></span>
+                  </div>
                 </div>
               </div>
             </motion.button>
