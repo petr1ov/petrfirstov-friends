@@ -121,7 +121,7 @@ const ProductsCasesSection = () => {
                 <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur text-[10px] text-white z-10">
                   {categoryLabels[c.category] || c.category}
                 </div>
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-black/55 backdrop-blur-md border-t border-white/10">
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-black/35 backdrop-blur-md border-t border-white/10">
                   <p className="font-display font-semibold text-sm sm:text-base text-white line-clamp-1">{c.title}</p>
                   {c.subtitle && <p className="text-[11px] text-white/75 line-clamp-1 mt-0.5">{c.subtitle}</p>}
                   <div className="flex items-center justify-between mt-1.5">
