@@ -61,7 +61,7 @@ const HeroSection = () => {
           transition={{ duration: 0.7, delay: 0.3 }}
           className="text-miniapp-foreground/75 text-base sm:text-lg mb-8 max-w-md mx-auto text-balance"
         >
-          Цифровые сотрудники, которые привлекают клиентов и отвечают за вас — 24/7
+          От идеи до работающего продукта за 14 дней — боты, CRM, AI-ассистенты
         </motion.p>
 
         <motion.div
