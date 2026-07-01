@@ -10,9 +10,20 @@ const HeroSection = () => {
   return (
     <section className="relative pt-24 pb-16 px-4 overflow-hidden" aria-labelledby="hero-title">
       {/* Aurora orbs */}
-      <div aria-hidden="true" className="absolute top-20 -left-32 w-72 h-72 bg-miniapp-purple/30 rounded-full blur-[110px] animate-aurora" />
-      <div aria-hidden="true" className="absolute top-40 -right-32 w-72 h-72 bg-miniapp-blue/25 rounded-full blur-[110px] animate-aurora" style={{ animationDelay: "2s" }} />
-      <div aria-hidden="true" className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-miniapp-neon/15 rounded-full blur-[90px] animate-aurora" style={{ animationDelay: "4s" }} />
+      <div
+        aria-hidden="true"
+        className="absolute top-20 -left-32 w-72 h-72 bg-miniapp-purple/30 rounded-full blur-[110px] animate-aurora"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute top-40 -right-32 w-72 h-72 bg-miniapp-blue/25 rounded-full blur-[110px] animate-aurora"
+        style={{ animationDelay: "2s" }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-miniapp-neon/15 rounded-full blur-[90px] animate-aurora"
+        style={{ animationDelay: "4s" }}
+      />
 
       <div className="relative max-w-xl mx-auto text-center">
         <motion.div
@@ -51,7 +62,7 @@ const HeroSection = () => {
             Пётр Фирстов
           </span>
           <span className="block mt-2 text-2xl sm:text-3xl md:text-4xl bg-gradient-to-r from-miniapp-purple via-miniapp-blue to-miniapp-neon bg-clip-text text-transparent">
-            AI-боты для бизнеса
+            AI-агенты для бизнеса
           </span>
         </motion.h1>
 
