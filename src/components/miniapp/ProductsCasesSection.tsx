@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, ExternalLink, Rocket, Calculator, ArrowRight, CheckCircle2, Layers, ImageIcon, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import CaseLeadDialog, { LeadMode } from "./CaseLeadDialog";
 
 type Case = {
   id: string;
@@ -58,6 +59,8 @@ const ProductsCasesSection = () => {
   const [cases, setCases] = useState<Case[]>([]);
   const [activeTag, setActiveTag] = useState<string>("all");
   const [selected, setSelected] = useState<Case | null>(null);
+  const [leadMode, setLeadMode] = useState<LeadMode | null>(null);
+  const [leadCase, setLeadCase] = useState<Case | null>(null);
 
   useEffect(() => {
     supabase.from("cases").select("*").order("sort_order").then(({ data }) => {
@@ -69,11 +72,9 @@ const ProductsCasesSection = () => {
   const filtered = activeTag === "all" ? cases : cases.filter(c => c.tags?.includes(activeTag));
   const sorted = [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
-  const handleCTA = (action: string) => {
-    const tgLink = action === "calculate"
-      ? "https://t.me/PetrFirstovBot?start=src_calculate"
-      : "https://t.me/PetrFirstovBot?start=src_want_same";
-    window.open(tgLink, "_blank");
+  const handleCTA = (action: string, c: Case) => {
+    setLeadCase(c);
+    setLeadMode(action === "calculate" ? "calculate" : "want_same");
   };
 
   return (
@@ -139,9 +140,17 @@ const ProductsCasesSection = () => {
 
         <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
           <DialogContent className="bg-[hsl(var(--miniapp-bg))] border-white/10 text-[hsl(var(--miniapp-fg))] max-w-2xl mx-4 max-h-[90vh] overflow-y-auto p-0">
-            {selected && <CaseView c={selected} onCTA={handleCTA} />}
+            {selected && <CaseView c={selected} onCTA={(a) => handleCTA(a, selected)} />}
           </DialogContent>
         </Dialog>
+
+        <CaseLeadDialog
+          open={leadMode !== null}
+          onOpenChange={(o) => !o && setLeadMode(null)}
+          mode={leadMode ?? "calculate"}
+          caseTitle={leadCase?.title}
+          caseBudget={leadCase ? formatBudget(leadCase.budget, leadCase.price) : null}
+        />
       </div>
     </section>
   );
