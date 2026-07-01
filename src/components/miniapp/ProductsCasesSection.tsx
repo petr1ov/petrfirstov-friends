@@ -148,6 +148,7 @@ const ProductsCasesSection = () => {
 };
 
 const CaseView = ({ c, onCTA }: { c: Case; onCTA: (a: string) => void }) => {
+  const [lightbox, setLightbox] = useState<number | null>(null);
   return (
     <div>
       {/* Cover */}
@@ -234,11 +235,50 @@ const CaseView = ({ c, onCTA }: { c: Case; onCTA: (a: string) => void }) => {
           <Block title="Галерея" emoji="🖼">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {c.gallery.map((path, i) => (
-                <div key={i} className="aspect-square rounded-lg overflow-hidden glass-card">
-                  <SignedImg path={path} className="w-full h-full object-cover hover:scale-110 transition-transform" />
-                </div>
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setLightbox(i)}
+                  className="aspect-square rounded-lg overflow-hidden glass-card focus-ring group"
+                  aria-label={`Открыть изображение ${i + 1}`}
+                >
+                  <SignedImg path={path} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                </button>
               ))}
             </div>
+            <Dialog open={lightbox !== null} onOpenChange={(o) => !o && setLightbox(null)}>
+              <DialogContent className="bg-black/95 border-white/10 max-w-5xl w-[95vw] p-0 overflow-hidden">
+                {lightbox !== null && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setLightbox(null)}
+                      className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white"
+                      aria-label="Закрыть"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                    <LightboxImg path={c.gallery[lightbox]} />
+                    {c.gallery.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setLightbox((lightbox - 1 + c.gallery.length) % c.gallery.length)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-xl"
+                          aria-label="Предыдущее"
+                        >‹</button>
+                        <button
+                          onClick={() => setLightbox((lightbox + 1) % c.gallery.length)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-xl"
+                          aria-label="Следующее"
+                        >›</button>
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 text-white text-xs">
+                          {lightbox + 1} / {c.gallery.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </Block>
         )}
 
@@ -265,6 +305,12 @@ const CaseView = ({ c, onCTA }: { c: Case; onCTA: (a: string) => void }) => {
       </div>
     </div>
   );
+};
+
+const LightboxImg = ({ path }: { path: string | null }) => {
+  const url = useSignedUrl(path);
+  if (!url) return <div className="w-full h-[70vh] flex items-center justify-center"><ImageIcon className="w-10 h-10 text-white/30" /></div>;
+  return <img src={url} className="w-full max-h-[85vh] object-contain" alt="" />;
 };
 
 const Block = ({ title, emoji, children }: { title: string; emoji: string; children: React.ReactNode }) => (
