@@ -463,6 +463,7 @@ export type Database = {
           mvp_completed_at: string | null
           name: string
           progress: number
+          published_url: string | null
           scope_features: string[]
           status: string
           telegram_id: number
@@ -481,6 +482,7 @@ export type Database = {
           mvp_completed_at?: string | null
           name: string
           progress?: number
+          published_url?: string | null
           scope_features?: string[]
           status?: string
           telegram_id: number
@@ -499,6 +501,7 @@ export type Database = {
           mvp_completed_at?: string | null
           name?: string
           progress?: number
+          published_url?: string | null
           scope_features?: string[]
           status?: string
           telegram_id?: number
