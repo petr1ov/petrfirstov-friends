@@ -18,7 +18,6 @@ export default defineTool({
     status: z.enum(["new", "in_progress", "client", "rejected"]).describe("New status."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  needsApproval: true,
   handler: async ({ lead_id, status }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const { data, error } = await db(ctx)
