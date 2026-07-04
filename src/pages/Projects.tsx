@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, ExternalLink, Github, X, CheckCircle2, Users, Webhook, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProjectMembers } from "@/components/admin/ProjectMembers";
 
@@ -61,6 +61,27 @@ export default function Projects() {
   const [membersCount, setMembersCount] = useState<Record<string, number>>({});
   const [discovering, setDiscovering] = useState(false);
   const { toast } = useToast();
+  const [webhookDialog, setWebhookDialog] = useState<Project | null>(null);
+  const [webhookSecret, setWebhookSecret] = useState<string>("");
+
+  const WEBHOOK_BASE = `https://hkrujkgxitjvgptjolwe.supabase.co/functions/v1/lovable-webhook`;
+
+  const openWebhookDialog = async (p: Project) => {
+    setWebhookDialog(p);
+    if (!webhookSecret) {
+      // Получим секрет через edge-функцию (она вернёт готовый URL)
+      const { data } = await supabase.functions.invoke("get-lovable-webhook-url", { body: {} });
+      if (data?.secret) setWebhookSecret(data.secret);
+    }
+  };
+
+  const copyWebhook = (p: Project) => {
+    const url = webhookSecret
+      ? `${WEBHOOK_BASE}?secret=${webhookSecret}`
+      : WEBHOOK_BASE;
+    navigator.clipboard.writeText(url);
+    toast({ title: "URL скопирован", description: p.name });
+  };
 
   const fetchAll = async () => {
     const { data } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
@@ -258,6 +279,11 @@ export default function Projects() {
                       <RefreshCw className={`h-3 w-3 mr-1 ${syncing === p.id ? "animate-spin" : ""}`} /> Sync
                     </Button>
                   )}
+                  {p.lovable_project_id && (
+                    <Button size="sm" variant="ghost" onClick={() => openWebhookDialog(p)} title="Webhook URL для Lovable">
+                      <Webhook className="h-3 w-3" />
+                    </Button>
+                  )}
                   <Button size="sm" variant="ghost" onClick={() => setEditing(p)}>
                     <Pencil className="h-3 w-3" />
                   </Button>
@@ -414,6 +440,40 @@ export default function Projects() {
             </Button>
             <Button onClick={save} disabled={saving}>
               {saving ? "Сохраняю..." : "Сохранить"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!webhookDialog} onOpenChange={(o) => { if (!o) setWebhookDialog(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Webhook для Lovable</DialogTitle>
+            <DialogDescription>
+              Скопируйте URL и вставьте в Lovable: Project Settings → Webhooks → Add webhook.
+              Уведомления о деплоях будут приходить клиенту в Telegram и админу.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-md bg-muted p-3 text-xs break-all font-mono">
+              {webhookSecret
+                ? `${WEBHOOK_BASE}?secret=${webhookSecret}`
+                : `${WEBHOOK_BASE}?secret=…загрузка…`}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Проект: <b>{webhookDialog?.name}</b>
+              {webhookDialog?.lovable_project_id && (
+                <> · Lovable ID: <code className="text-[10px]">{webhookDialog.lovable_project_id}</code></>
+              )}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              События: <code>deploy.success</code>, <code>deploy.failed</code>, <code>publish</code>.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setWebhookDialog(null)}>Закрыть</Button>
+            <Button onClick={() => webhookDialog && copyWebhook(webhookDialog)} disabled={!webhookSecret}>
+              <Copy className="h-4 w-4 mr-1" /> Копировать URL
             </Button>
           </DialogFooter>
         </DialogContent>

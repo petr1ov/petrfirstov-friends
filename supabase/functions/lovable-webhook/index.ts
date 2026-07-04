@@ -9,6 +9,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
 const WEBHOOK_SECRET = Deno.env.get("LV_WEBHOOK_SECRET")!;
+const ADMIN_CHAT_ID = Deno.env.get("TELEGRAM_ADMIN_CHAT_ID") || "";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -125,6 +126,15 @@ Deno.serve(async (req) => {
         await sendMessage(chatId, text);
         delivered++;
       }
+    }
+
+    // Admin — уведомляем всегда (даже preview), но кратко
+    if (ADMIN_CHAT_ID) {
+      const adminText =
+        `${label.emoji} <b>${escapeHtml(project.name)}</b> — ${escapeHtml(label.title)}` +
+        (message ? `\n💬 ${escapeHtml(message)}` : "") +
+        (publishedUrl ? `\n🔗 ${escapeHtml(publishedUrl)}` : "");
+      await sendMessage(Number(ADMIN_CHAT_ID), adminText);
     }
 
     return new Response(
