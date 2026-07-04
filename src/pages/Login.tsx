@@ -1,7 +1,17 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot } from "lucide-react";
 
 const Login = () => {
+  const [params] = useSearchParams();
+  useEffect(() => {
+    const next = params.get("next");
+    // Only allow same-origin relative paths.
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      sessionStorage.setItem("post_login_redirect", next);
+    }
+  }, [params]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg">
