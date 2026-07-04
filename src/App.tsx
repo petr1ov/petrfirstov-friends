@@ -15,6 +15,7 @@ import Broadcasts from "@/pages/Broadcasts";
 import Cases from "@/pages/Cases";
 import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
+import Webhooks from "@/pages/Webhooks";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/cases" element={<Cases />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/webhooks" element={<Webhooks />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
