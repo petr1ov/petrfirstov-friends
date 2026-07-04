@@ -120,6 +120,189 @@ var get_stats_default = defineTool4({
   }
 });
 
+// src/lib/mcp/tools/list-projects.ts
+import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.98.0";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z4 } from "npm:zod@^3.25.76";
+function db5(ctx) {
+  return createClient5(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var list_projects_default = defineTool5({
+  name: "list_projects",
+  title: "List projects",
+  description: "List client projects with status and progress.",
+  inputSchema: {
+    status: z4.string().optional().describe("Filter by status (e.g. 'active', 'done')."),
+    limit: z4.number().int().min(1).max(100).optional()
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ status, limit }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    let q = db5(ctx).from("projects").select("id, name, client_name, status, progress, mvp_completed_at, github_repo, created_at").order("created_at", { ascending: false }).limit(limit ?? 30);
+    if (status) q = q.eq("status", status);
+    const { data, error } = await q;
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: { projects: data ?? [] } };
+  }
+});
+
+// src/lib/mcp/tools/list-tasks.ts
+import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.98.0";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+function db6(ctx) {
+  return createClient6(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var list_tasks_default = defineTool6({
+  name: "list_tasks",
+  title: "List tasks",
+  description: "List project tasks. Filter by project_id and/or status.",
+  inputSchema: {
+    project_id: z5.string().uuid().optional(),
+    status: z5.string().optional().describe("e.g. 'todo', 'in_progress', 'done'."),
+    limit: z5.number().int().min(1).max(200).optional()
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ project_id, status, limit }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    let q = db6(ctx).from("tasks").select("id, title, description, status, priority, type, project_id, planned_for_date, completed_at, created_at").order("created_at", { ascending: false }).limit(limit ?? 50);
+    if (project_id) q = q.eq("project_id", project_id);
+    if (status) q = q.eq("status", status);
+    const { data, error } = await q;
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: { tasks: data ?? [] } };
+  }
+});
+
+// src/lib/mcp/tools/list-payouts.ts
+import { createClient as createClient7 } from "npm:@supabase/supabase-js@^2.98.0";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+function db7(ctx) {
+  return createClient7(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var list_payouts_default = defineTool7({
+  name: "list_payouts",
+  title: "List payouts",
+  description: "List partner payouts. Filter by status (pending/paid/cancelled).",
+  inputSchema: {
+    status: z6.enum(["pending", "paid", "cancelled"]).optional(),
+    limit: z6.number().int().min(1).max(200).optional()
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ status, limit }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    let q = db7(ctx).from("payouts").select("id, partner_id, amount, status, created_at").order("created_at", { ascending: false }).limit(limit ?? 50);
+    if (status) q = q.eq("status", status);
+    const { data, error } = await q;
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: { payouts: data ?? [] } };
+  }
+});
+
+// src/lib/mcp/tools/update-lead-status.ts
+import { createClient as createClient8 } from "npm:@supabase/supabase-js@^2.98.0";
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z7 } from "npm:zod@^3.25.76";
+function db8(ctx) {
+  return createClient8(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var update_lead_status_default = defineTool8({
+  name: "update_lead_status",
+  title: "Update lead status",
+  description: "Change a lead's funnel status (new / in_progress / client / rejected).",
+  inputSchema: {
+    lead_id: z7.string().uuid().describe("Lead UUID."),
+    status: z7.enum(["new", "in_progress", "client", "rejected"]).describe("New status.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  handler: async ({ lead_id, status }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const { data, error } = await db8(ctx).from("leads").update({ status }).eq("id", lead_id).select().maybeSingle();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (!data) return { content: [{ type: "text", text: "Lead not found" }], isError: true };
+    return { content: [{ type: "text", text: `Updated lead ${data.name ?? lead_id} \u2192 ${status}` }], structuredContent: { lead: data } };
+  }
+});
+
+// src/lib/mcp/tools/create-task.ts
+import { createClient as createClient9 } from "npm:@supabase/supabase-js@^2.98.0";
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z8 } from "npm:zod@^3.25.76";
+function db9(ctx) {
+  return createClient9(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var create_task_default = defineTool9({
+  name: "create_task",
+  title: "Create task",
+  description: "Add a task to a project. Requires project_id and title.",
+  inputSchema: {
+    project_id: z8.string().uuid(),
+    title: z8.string().min(1).max(500),
+    description: z8.string().optional(),
+    priority: z8.enum(["low", "medium", "high"]).optional(),
+    type: z8.string().optional().describe("Task type, e.g. 'scope' or 'ops'. Default 'ops'."),
+    planned_for_date: z8.string().optional().describe("ISO date, e.g. 2026-07-10.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async (input, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const { data, error } = await db9(ctx).from("tasks").insert({
+      project_id: input.project_id,
+      title: input.title,
+      description: input.description ?? null,
+      priority: input.priority ?? "medium",
+      type: input.type ?? "ops",
+      planned_for_date: input.planned_for_date ?? null,
+      status: "todo",
+      is_manual: true,
+      steps: []
+    }).select().maybeSingle();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return { content: [{ type: "text", text: `Created task: ${data?.title}` }], structuredContent: { task: data } };
+  }
+});
+
+// src/lib/mcp/tools/complete-task.ts
+import { createClient as createClient10 } from "npm:@supabase/supabase-js@^2.98.0";
+import { defineTool as defineTool10 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z9 } from "npm:zod@^3.25.76";
+function db10(ctx) {
+  return createClient10(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var complete_task_default = defineTool10({
+  name: "complete_task",
+  title: "Complete task",
+  description: "Mark a task as done.",
+  inputSchema: { task_id: z9.string().uuid() },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  handler: async ({ task_id }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const { data, error } = await db10(ctx).from("tasks").update({ status: "done" }).eq("id", task_id).select().maybeSingle();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (!data) return { content: [{ type: "text", text: "Task not found" }], isError: true };
+    return { content: [{ type: "text", text: `Completed: ${data.title}` }], structuredContent: { task: data } };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "hkrujkgxitjvgptjolwe";
 var mcp_default = defineMcp({
@@ -131,7 +314,18 @@ var mcp_default = defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [get_stats_default, list_leads_default, list_partners_default, list_cases_default]
+  tools: [
+    get_stats_default,
+    list_leads_default,
+    list_partners_default,
+    list_cases_default,
+    list_projects_default,
+    list_tasks_default,
+    list_payouts_default,
+    update_lead_status_default,
+    create_task_default,
+    complete_task_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts

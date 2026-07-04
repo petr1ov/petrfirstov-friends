@@ -3,6 +3,12 @@ import listLeadsTool from "./tools/list-leads";
 import listPartnersTool from "./tools/list-partners";
 import listCasesTool from "./tools/list-cases";
 import getStatsTool from "./tools/get-stats";
+import listProjectsTool from "./tools/list-projects";
+import listTasksTool from "./tools/list-tasks";
+import listPayoutsTool from "./tools/list-payouts";
+import updateLeadStatusTool from "./tools/update-lead-status";
+import createTaskTool from "./tools/create-task";
+import completeTaskTool from "./tools/complete-task";
 
 const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unset";
 
@@ -16,5 +22,16 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [getStatsTool, listLeadsTool, listPartnersTool, listCasesTool],
+  tools: [
+    getStatsTool,
+    listLeadsTool,
+    listPartnersTool,
+    listCasesTool,
+    listProjectsTool,
+    listTasksTool,
+    listPayoutsTool,
+    updateLeadStatusTool,
+    createTaskTool,
+    completeTaskTool,
+  ],
 });
