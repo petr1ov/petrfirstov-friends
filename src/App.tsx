@@ -19,6 +19,7 @@ import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
 import AdminLogin from "@/pages/AdminLogin";
+import OAuthConsent from "@/pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
           <Routes>
             <Route path="/mini-app" element={<MiniApp />} />
             <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
