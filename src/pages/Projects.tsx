@@ -25,6 +25,7 @@ type Project = {
   telegram_id: number;
   client_name: string | null;
   github_repo: string | null;
+  published_url: string | null;
   status: string;
   progress: number;
   last_commit_at: string | null;
@@ -42,6 +43,7 @@ const empty: Partial<Project> = {
   telegram_id: 0,
   client_name: "",
   github_repo: "",
+  published_url: "",
   status: "active",
   progress: 0,
   description: "",
@@ -86,6 +88,7 @@ export default function Projects() {
       telegram_id: Number(editing.telegram_id),
       client_name: editing.client_name || null,
       github_repo: editing.github_repo || null,
+      published_url: editing.published_url || null,
       status: editing.status || "active",
       description: editing.description || null,
       scope_features: editing.scope_features || [],
@@ -206,6 +209,16 @@ export default function Projects() {
                     className="flex items-center gap-1 text-xs text-primary hover:underline"
                   >
                     <Github className="h-3 w-3" /> {p.github_repo}
+                  </a>
+                )}
+                {p.published_url && (
+                  <a
+                    href={p.published_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" /> {p.published_url.replace(/^https?:\/\//, "")}
                   </a>
                 )}
                 {p.last_commit_message && (
@@ -333,6 +346,14 @@ export default function Projects() {
                 value={editing?.github_repo || ""}
                 onChange={(e) => setEditing({ ...editing!, github_repo: e.target.value })}
                 placeholder="petrfirstov/my-app"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Опубликованный URL</label>
+              <Input
+                value={editing?.published_url || ""}
+                onChange={(e) => setEditing({ ...editing!, published_url: e.target.value })}
+                placeholder="https://my-app.lovable.app"
               />
             </div>
             <div>
