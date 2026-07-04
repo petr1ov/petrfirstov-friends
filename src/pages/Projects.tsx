@@ -59,6 +59,7 @@ export default function Projects() {
   const [syncing, setSyncing] = useState<string | null>(null);
   const [scopeInput, setScopeInput] = useState("");
   const [membersCount, setMembersCount] = useState<Record<string, number>>({});
+  const [discovering, setDiscovering] = useState(false);
   const { toast } = useToast();
 
   const fetchAll = async () => {
@@ -146,6 +147,22 @@ export default function Projects() {
     fetchAll();
   };
 
+  const discoverRepos = async (overwrite = false) => {
+    setDiscovering(true);
+    const { data, error } = await supabase.functions.invoke("discover-github-repos", {
+      body: { overwrite },
+    });
+    setDiscovering(false);
+    if (error) return toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+    toast({
+      title: `Привязано: ${data?.matched ?? 0} из ${(data?.matched ?? 0) + (data?.unmatched ?? 0)}`,
+      description: data?.unmatched
+        ? `Не найдено: ${data.unmatched_projects?.slice(0, 3).join(", ")}${data.unmatched > 3 ? "…" : ""}`
+        : "Все проекты сопоставлены с GitHub",
+    });
+    fetchAll();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -153,9 +170,15 @@ export default function Projects() {
           <h1 className="text-2xl font-bold">Проекты клиентов</h1>
           <p className="text-sm text-muted-foreground">Привяжите Telegram ID клиента — у него появится «Мой проект» в боте.</p>
         </div>
-        <Button onClick={() => setEditing({ ...empty })}>
-          <Plus className="h-4 w-4 mr-1" /> Новый проект
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => discoverRepos(false)} disabled={discovering}>
+            <Github className={`h-4 w-4 mr-1 ${discovering ? "animate-pulse" : ""}`} />
+            {discovering ? "Ищу репозитории…" : "Auto-link GitHub"}
+          </Button>
+          <Button onClick={() => setEditing({ ...empty })}>
+            <Plus className="h-4 w-4 mr-1" /> Новый проект
+          </Button>
+        </div>
       </div>
 
       {loading ? (
