@@ -41,7 +41,13 @@ const AdminLogin = () => {
         }
 
         setStatus("success");
-        navigate("/", { replace: true });
+        const next = sessionStorage.getItem("post_login_redirect");
+        if (next && next.startsWith("/") && !next.startsWith("//")) {
+          sessionStorage.removeItem("post_login_redirect");
+          window.location.replace(next);
+        } else {
+          navigate("/", { replace: true });
+        }
       } catch (e: any) {
         setStatus("error");
         setErrorMsg(e.message || "Ошибка");
