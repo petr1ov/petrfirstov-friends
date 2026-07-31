@@ -19,6 +19,7 @@ import Webhooks from "@/pages/Webhooks";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import MiniApp from "@/pages/MiniApp";
+import PrototypeHero from "@/pages/PrototypeHero";
 import AdminLogin from "@/pages/AdminLogin";
 import OAuthConsent from "@/pages/OAuthConsent";
 
@@ -47,6 +48,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/mini-app" element={<MiniApp />} />
+            <Route path="/prototypes/hero" element={<PrototypeHero />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
