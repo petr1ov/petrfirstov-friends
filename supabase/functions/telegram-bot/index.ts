@@ -259,32 +259,31 @@ async function getAIResponse(telegramId: number, userMessage: string): Promise<s
   const servicesContext = botUser?.services ? `\nУслуги пользователя: ${botUser.services}` : "";
   const goalContext = botUser?.goal ? `\nЦель пользователя: ${botUser.goal}` : "";
 
-  const systemPrompt = `Ты — продающий ассистент эксперта Петра Фирстова, соло-разработчика ИИ-решений для экспертов и бизнеса.
+  const systemPrompt = `Ты — AI-напарник Петра Фирстова, создателя цифровых продуктов с AI.
+
+Контекст проекта «FIRSTOV.AI»:
+— Пётр создаёт продукты с AI и учит других создавать сам.
+— Два пути для пользователя: «Создавать самому» (сообщество «Созидатели 2.0», AI-наставник, шаблоны) и «Обсудить проект» (готовый продукт под ключ: бот, CRM, AI-ассистент, мини-приложение, MVP за 14 дней).
+— Главная идея: превратить идею человека в работающий продукт — с AI как напарником.
 
 Твоя задача:
-— отвечать как эксперт в разработке Telegram-ботов, AI-ассистентов, сайтов, MVP
-— вести диалог дружелюбно и профессионально
-— подводить к заявке на проект
-— показывать ценность автоматизации
+— отвечать как эксперт в создании Telegram-ботов, AI-ассистентов, сайтов, MVP
+— вести диалог дружелюбно и по-доброму
+— помогать пользователю выбрать путь: создавать самому или заказать у Петра
+— подводить к действию: попробовать AI, зайти в сообщество, оставить заявку
 
-ВАЖНО: Форматируй ответ в HTML для Telegram. Используй <b>жирный</b> и <i>курсив</i>. НЕ используй Markdown (**, __, *).
-
-Услуги Петра:
+Услуги Петра (под ключ):
 • Ботовизитка — от 10 000 ₽
-• AI-бот (Telegram/VK/MAX) — от 15 000 ₽  
+• AI-бот (Telegram/VK/MAX) — от 15 000 ₽
 • Голосовой бот — от 20 000 ₽/мес
-• Мини-приложение/сервис — от 30 000 ₽
-
-Кейсы:
-• Агрегатор мероприятий «Город+» — бот + сайт + админка + аналитика (≈80 000 ₽)
-• AI-наставник в Telegram — ИИ-ассистент + личный кабинет + геймификация (≈120 000 ₽)
-• Боты для экспертов — автоответы + сбор заявок + рост записей
-• AI-ассистенты — 24/7 диалог + доведение до заявки
+• Мини-приложение / сервис — от 30 000 ₽
 
 Сайт: https://petrfirstov.ru
 ${nicheContext}${servicesContext}${goalContext}
 
-Отвечай кратко (до 300 слов), используй эмодзи. Если пользователь спрашивает о цене — давай диапазон и предлагай обсудить детали. В конце предлагай оставить заявку или написать @petrfirstov.`;
+ВАЖНО: Форматируй ответ в HTML для Telegram. Используй <b>жирный</b> и <i>курсив</i>. НЕ используй Markdown (**, __, *).
+
+Отвечай кратко (до 300 слов), используй эмодзи. Если пользователь спрашивает о цене — давай диапазон и предлагай обсудить детали. В конце предлагай: попробовать AI, зайти в сообщество «Созидатели 2.0» или оставить заявку.`;
 
   const messages = [
     { role: "system", content: systemPrompt },
@@ -358,6 +357,8 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
       miniapp_launch: "miniapp_launch",
       miniapp_partner: "miniapp_partner",
       miniapp_calculator: "miniapp_calculator",
+      miniapp_creators: "miniapp_creators",
+      miniapp_start: "miniapp_start",
     };
 
     if (miniappSources[startParam]) {
@@ -369,45 +370,132 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
         return;
       }
       if (startParam === "miniapp_calculator") {
-        await handleWantBotcard(chatId);
+        await handleDiscussProject(chatId);
         return;
       }
+      if (startParam === "miniapp_creators") {
+        await handleCreators(chatId);
+        return;
+      }
+      // miniapp_start, miniapp_contact, miniapp_launch → full warm-up
     } else if (!startParam.startsWith("ref_")) {
       await handleEventEntry(chatId, firstName, startParam);
       return;
     }
   }
 
-  const text = `Привет, ${firstName} 👋
-Рад, что ты здесь!
+  // Прогрев — узнай себя
+  await sendMessage(
+    chatId,
+    `Привет, ${firstName} 👋\n\nУзнаёшь себя?\n\n💡 Идея крутится в голове уже давно\n🤔 Знаешь, что хочешь создать, но не хватает ресурса\n⚡ Хочешь свой продукт — бот, сервис, AI-ассистент\n\nИ главное — хочешь не просто заказать, а создавать сам.`,
+  );
 
-Я уже настроил для тебя этот бот как пример того,
-как можно автоматизировать привлечение клиентов 🤖
-
-Здесь ты можешь:
-
-— посмотреть, как работают AI-боты
-— увидеть реальные кейсы
-— понять, сколько это стоит
-— и даже протестировать, как бот будет отвечать за тебя
-
-💡 По сути, ты сейчас внутри готовой системы,
-которую можно адаптировать под твой бизнес
-
-👇 С чего начнём?`;
-
-  await sendMessage(chatId, text, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🔍 Посмотреть кейсы", callback_data: "cases" }],
-        [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
-        [{ text: "💰 Сколько стоит", callback_data: "pricing" }],
-        [{ text: "📱 Мини-приложение", url: "https://petrfirstov.lovable.app/mini-app" }],
-        [{ text: "📊 Мой проект", callback_data: "client_project" }],
-        [{ text: "🚀 Стать партнёром", callback_data: "register" }],
-      ],
+  // Два пути
+  await sendMessage(
+    chatId,
+    `Я — Пётр Фирстов. Создаю цифровые продукты с AI и учу этому.\n\nТут два пути:\n\n🛠 <b>Создавать самому</b> — с AI как напарником, в сообществе «Созидатели 2.0». От идеи до MVP своими руками.\n\n🤝 <b>Обсудить проект со мной</b> — готовый продукт под ключ: бот, CRM, AI-ассистент, мини-приложение.\n\nОба пути — про одно: превратить идею в работающий продукт.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+          [{ text: "🤝 Обсудить проект", callback_data: "discuss" }],
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "📱 Мини-приложение", url: "https://petrfirstov.lovable.app/mini-app" }],
+        ],
+      },
     },
-  });
+  );
+}
+
+// Компактное главное меню (возврат из разделов)
+async function handleMainMenu(chatId: number) {
+  await sendMessage(
+    chatId,
+    `👇 Выберите путь:`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+          [{ text: "🤝 Обсудить проект", callback_data: "discuss" }],
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "📊 Кейсы", callback_data: "cases" }],
+          [{ text: "📊 Мой проект", callback_data: "client_project" }],
+          [{ text: "🚀 Стать партнёром", callback_data: "register" }],
+        ],
+      },
+    },
+  );
+}
+
+// Путь 1 — Создавать самому
+async function handleCreators(chatId: number) {
+  await sendMessage(
+    chatId,
+    `🛠 <b>Создавай сам — с AI и сообществом</b>\n\n«Созидатели 2.0» — для тех, кто хочет создавать свои продукты с помощью AI, а не просто заказывать.\n\nЧто внутри:\n• AI-наставник — разбирает идею и ведёт по шагам\n• Готовые шаблоны: бот, мини-приложение, CRM\n• Сообщество тех, кто уже создаёт\n• Путь: идея → прототип → MVP → самостоятельное создание\n\nГлавное: ты учишься создавать сам. AI — напарник, не замена.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🚀 Что можно создавать", callback_data: "what_to_build" }],
+          [{ text: "⚙️ Как это работает", callback_data: "process" }],
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "📱 В сообщество", url: "https://petrfirstov.lovable.app/mini-app" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
+      },
+    },
+  );
+}
+
+async function handleWhatToBuild(chatId: number) {
+  await sendMessage(
+    chatId,
+    `🚀 <b>Что можно создавать с AI</b>\n\n• <b>Telegram-боты</b> — автоответы, воронки, заявки\n• <b>AI-ассистенты</b> — 24/7 диалог, доведение до заявки\n• <b>Мини-приложения</b> — как сайт, прямо в Telegram\n• <b>CRM и аналитика</b> — клиенты и цифры в одном месте\n• <b>MVP стартапа</b> — от идеи до работающего продукта\n• <b>Голосовые боты</b> — распознают речь и отвечают\n\nПо сути — любой цифровой продукт. AI ускоряет каждый шаг.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "⚙️ Как это работает", callback_data: "process" }],
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "🔙 Назад", callback_data: "creators" }],
+        ],
+      },
+    },
+  );
+}
+
+async function handleProcess(chatId: number) {
+  await sendMessage(
+    chatId,
+    `⚙️ <b>Как это работает — 5 шагов</b>\n\n1️⃣ <b>Идея</b> — описываешь, что хочешь создать\n2️⃣ <b>AI-разбор</b> — AI помогает понять, что реально нужно\n3️⃣ <b>Прототип</b> — первый работающий вариант за дни, не месяцы\n4️⃣ <b>MVP</b> — продукт, которым пользуются\n5️⃣ <b>Самостоятельность</b> — ты создаёшь следующее сам\n\nКаждый шаг — с AI как напарником и поддержкой сообщества.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🚀 Что можно создавать", callback_data: "what_to_build" }],
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "🔙 Назад", callback_data: "creators" }],
+        ],
+      },
+    },
+  );
+}
+
+// Путь 2 — Обсудить проект
+async function handleDiscussProject(chatId: number) {
+  await sendMessage(
+    chatId,
+    `🤝 <b>Обсудим твой проект</b>\n\nЕсли нужен готовый продукт под ключ — я сделаю:\n• Telegram-боты и AI-ассистенты\n• Мини-приложения и сервисы\n• CRM и автоматизацию\n• MVP от идеи до запуска за 14 дней\n\nДавай посмотрим кейсы и прикинем стоимость 👇`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📊 Кейсы", callback_data: "cases" }],
+          [{ text: "💰 Сколько стоит", callback_data: "pricing" }],
+          [{ text: "🎁 Ботовизитка", callback_data: "want_botcard" }],
+          [{ text: "📝 Оставить заявку", callback_data: "leave_request" }],
+          [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
+      },
+    },
+  );
 }
 
 async function handleEventEntry(chatId: number, firstName: string, eventCode: string) {
@@ -1369,12 +1457,15 @@ ${canEdit ? `✏️ <b>Отправить правку</b> — опишите т
     chatId,
     `❓ <b>Подсказка</b>
 
-Я — бот Петра Фирстова. Здесь можно:
+Я — бот Петра Фирстова. Создавай свои проекты с AI.
 
-🔍 Посмотреть кейсы и услуги
-🤖 Попробовать AI-ассистента
-💬 Задать любой вопрос — AI ответит
-📝 Оставить заявку
+🛠 <b>Создавать самому</b> — AI-наставник, шаблоны, сообщество «Созидатели 2.0»
+🤝 <b>Обсудить проект</b> — готовый продукт под ключ (бот, CRM, AI-ассистент, MVP)
+🤖 <b>Попробовать AI</b> — напиши в чат, AI ответит
+🔍 <b>Кейсы и цены</b> — реальные работы и стоимость
+📝 <b>Заявка</b> — оставить заявку на проект
+
+🎙 Голосовые сообщения тоже понимаю.
 
 <b>Команды:</b>
 /start — главное меню
@@ -1382,7 +1473,11 @@ ${canEdit ? `✏️ <b>Отправить правку</b> — опишите т
 /help — эта подсказка`,
     {
       reply_markup: {
-        inline_keyboard: [[{ text: "🔙 Главное меню", callback_data: "start" }]],
+        inline_keyboard: [
+          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+          [{ text: "🤝 Обсудить проект", callback_data: "discuss" }],
+          [{ text: "🔙 Главное меню", callback_data: "start" }],
+        ],
       },
     },
   );
@@ -1491,7 +1586,15 @@ Deno.serve(async (req) => {
       const data = cb.data;
 
       if (data === "start") {
-        await handleStart(chatId, firstName);
+        await handleMainMenu(chatId);
+      } else if (data === "creators") {
+        await handleCreators(chatId);
+      } else if (data === "discuss") {
+        await handleDiscussProject(chatId);
+      } else if (data === "what_to_build") {
+        await handleWhatToBuild(chatId);
+      } else if (data === "process") {
+        await handleProcess(chatId);
       } else if (data === "register") {
         await handleRegister(chatId, telegramId, username);
       } else if (data === "cases") {
