@@ -1,10 +1,18 @@
 import HeroSection from "@/components/miniapp/HeroSection";
-import HowItWorks from "@/components/miniapp/HowItWorks";
+import RecognizeSection from "@/components/miniapp/RecognizeSection";
+import StorySection from "@/components/miniapp/StorySection";
+import OfferSection from "@/components/miniapp/OfferSection";
+import ProcessSection from "@/components/miniapp/ProcessSection";
+import CreatorsSection from "@/components/miniapp/CreatorsSection";
+import DifferenceSection from "@/components/miniapp/DifferenceSection";
+import WhatToBuildSection from "@/components/miniapp/WhatToBuildSection";
+import PhilosophySection from "@/components/miniapp/PhilosophySection";
+import TransformationSection from "@/components/miniapp/TransformationSection";
+import BeyondAISection from "@/components/miniapp/BeyondAISection";
+import TwoPathsSection from "@/components/miniapp/TwoPathsSection";
 import ProductsCasesSection from "@/components/miniapp/ProductsCasesSection";
-import BenefitsSection from "@/components/miniapp/BenefitsSection";
-import AIDemoSection from "@/components/miniapp/AIDemoSection";
+import AboutSection from "@/components/miniapp/AboutSection";
 import CalculatorQuiz from "@/components/miniapp/CalculatorQuiz";
-import PartnerSection from "@/components/miniapp/PartnerSection";
 import CTASection from "@/components/miniapp/CTASection";
 import MiniAppNav from "@/components/miniapp/MiniAppNav";
 
@@ -20,12 +28,20 @@ const MiniApp = () => {
       <MiniAppNav />
       <main id="main">
         <HeroSection />
-        <HowItWorks />
+        <RecognizeSection />
+        <StorySection />
+        <OfferSection />
+        <ProcessSection />
+        <CreatorsSection />
+        <DifferenceSection />
+        <WhatToBuildSection />
+        <PhilosophySection />
+        <TransformationSection />
+        <BeyondAISection />
+        <TwoPathsSection />
         <ProductsCasesSection />
-        <BenefitsSection />
-        <AIDemoSection />
+        <AboutSection />
         <CalculatorQuiz />
-        <PartnerSection />
         <CTASection />
       </main>
     </div>
