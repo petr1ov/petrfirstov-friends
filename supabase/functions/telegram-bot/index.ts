@@ -348,37 +348,145 @@ async function getEventOffer(eventCode: string): Promise<{ price: number; spotsL
   return null;
 }
 
+// ====== FUNNEL (site → bot) ======
+
+type FunnelTemp = "cold" | "warm" | "hot" | "club" | "partner";
+
+const BLOCK_TITLES: Record<string, string> = {
+  recognize: "«Узнаёшь себя?»",
+  story: "«Моя история»",
+  philosophy: "«Философия»",
+  transformation: "«Что происходит с человеком»",
+  offer: "«Что я предлагаю»",
+  process: "«Как это работает»",
+  build: "«Что можно создавать»",
+  beyond: "«Это не только про AI»",
+  cases: "«Кейсы»",
+  calculator: "«Калькулятор проекта»",
+  discuss: "«Обсудить проект»",
+  contact: "кнопки «Написать»",
+  creators: "«Созидатели 2.0»",
+  difference: "«Главное отличие»",
+  ambassador: "«Партнёрство»",
+  start: "финального блока",
+};
+
+function parseFunnel(startParam: string): { temp: FunnelTemp; block: string } | null {
+  const m = /^(cold|warm|hot|club|partner)_([a-z0-9]+)$/.exec(startParam);
+  if (!m) return null;
+  return { temp: m[1] as FunnelTemp, block: m[2] };
+}
+
+// Legacy deep links → новая схема воронок
+const LEGACY_FUNNEL: Record<string, string> = {
+  miniapp_start: "warm_start",
+  miniapp_contact: "hot_contact",
+  miniapp_launch: "warm_start",
+  miniapp_calculator: "hot_calculator",
+  miniapp_creators: "club_creators",
+  miniapp_partner: "partner_ambassador",
+};
+
+async function handleFunnelEntry(chatId: number, firstName: string, temp: FunnelTemp, block: string) {
+  await trackAction(chatId, "funnel_entry", { temp, block });
+  await supabase
+    .from("bot_users")
+    .update({ source: `${temp}_${block}`, funnel_temp: temp, entry_block: block })
+    .eq("telegram_id", chatId);
+
+  const from = BLOCK_TITLES[block] ? ` из блока ${BLOCK_TITLES[block]}` : "";
+
+  if (temp === "cold") {
+    await sendMessage(
+      chatId,
+      `Привет, ${firstName} 👋\n\nВы пришли${from} — значит, что-то откликнулось.\n\nУ большинства людей есть идея, которая живёт в голове годами. Не хватает не таланта — хватает только первого шага.\n\n<b>Скажите одной фразой: что вы давно хотите создать?</b>\n\nНапишите текстом или голосом — я разберу вашу идею вместе с AI и покажу, как она может выглядеть на практике. Бесплатно, без обязательств.`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🤖 Разобрать мою идею с AI", callback_data: "try_ai" }],
+            [{ text: "📖 Философия и путь", callback_data: "creators" }],
+            [{ text: "👇 Показать оба пути", callback_data: "main_menu" }],
+          ],
+        },
+      },
+    );
+    return;
+  }
+
+  if (temp === "warm") {
+    await sendMessage(
+      chatId,
+      `${firstName}, привет 👋\n\nВы зашли${from} — то есть уже понимаете «зачем» и хотите разобраться «как».\n\nКоротко, как это работает:\n1️⃣ Идея — вы описываете, что хотите\n2️⃣ AI-разбор — что реально нужно, а что лишнее\n3️⃣ Прототип за дни, не месяцы\n4️⃣ MVP, которым пользуются\n5️⃣ Дальше вы создаёте сами\n\n<b>Опишите вашу идею — сделаю мини-разбор прямо здесь.</b>`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🤖 Мини-разбор идеи с AI", callback_data: "try_ai" }],
+            [{ text: "🚀 Что можно создавать", callback_data: "what_to_build" }],
+            [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+            [{ text: "🤝 Обсудить проект со мной", callback_data: "discuss" }],
+          ],
+        },
+      },
+    );
+    return;
+  }
+
+  if (temp === "hot") {
+    await sendMessage(
+      chatId,
+      `${firstName}, здравствуйте 👋\n\nВы пришли${from} — значит, речь про конкретный проект. Не буду тратить ваше время на теорию.\n\n<b>Ответьте тремя строками:</b>\n1. Что нужно сделать?\n2. Для чего / какая задача бизнеса?\n3. Когда нужен результат?\n\nОриентиры по цене:\n• Ботовизитка — от 10 000 ₽\n• AI-бот — от 15 000 ₽\n• Голосовой бот — от 20 000 ₽\n• Мини-приложение / сервис — от 30 000 ₽\n• MVP под ключ — от 14 дней\n\nПосле ответа дам вилку по вашему проекту и предложу короткий разговор.`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "📝 Оставить заявку", callback_data: "leave_request" }],
+            [{ text: "💰 Сколько стоит", callback_data: "pricing" }],
+            [{ text: "📊 Кейсы", callback_data: "cases" }],
+            [{ text: "👨‍💻 Написать Петру", url: "https://t.me/petrfirstov" }],
+          ],
+        },
+      },
+    );
+    return;
+  }
+
+  if (temp === "club") {
+    await handleCreators(chatId);
+    await sendMessage(
+      chatId,
+      `Вы пришли${from}. Что будет у вас уже на первой неделе:\n\n✅ разобранная идея и понятный объём\n✅ первый работающий прототип\n✅ шаблон под ваш случай (бот / мини-приложение / CRM)\n✅ поддержка сообщества и AI-наставника\n\nЕсли хотите — начнём с разбора вашей идеи прямо сейчас.`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🤖 Разобрать идею с AI", callback_data: "try_ai" }],
+            [{ text: "📱 Вступить в «Созидатели 2.0»", url: "https://petrfirstov.lovable.app/mini-app" }],
+          ],
+        },
+      },
+    );
+    return;
+  }
+
+  // partner
+  await sendMessage(
+    chatId,
+    `${firstName}, рад видеть 🤝\n\nВы пришли${from} — расскажу коротко, как работает партнёрство.\n\n• Вы получаете личную ссылку и делитесь ей\n• Каждый пришедший закрепляется за вами\n• Вы получаете вознаграждение с каждого оплаченного проекта\n• Средний проект — 15 000–120 000 ₽, значит и выплата ощутимая\n• Амбассадорам — приоритетная поддержка и материалы для контента\n\nСейчас оформлю вашу ссылку 👇`,
+  );
+  await handleRegister(chatId, chatId, undefined);
+}
+
 // ====== MAIN BOT SCENARIOS ======
 
 async function handleStart(chatId: number, firstName: string, startParam?: string) {
   if (startParam && startParam !== "") {
-    const miniappSources: Record<string, string> = {
-      miniapp_contact: "miniapp_contact",
-      miniapp_launch: "miniapp_launch",
-      miniapp_partner: "miniapp_partner",
-      miniapp_calculator: "miniapp_calculator",
-      miniapp_creators: "miniapp_creators",
-      miniapp_start: "miniapp_start",
-    };
+    const normalized = LEGACY_FUNNEL[startParam] || startParam;
+    const funnel = parseFunnel(normalized);
 
-    if (miniappSources[startParam]) {
-      await trackAction(chatId, "miniapp_deeplink", { source: startParam });
-      await supabase.from("bot_users").update({ source: startParam }).eq("telegram_id", chatId);
+    if (funnel) {
+      await handleFunnelEntry(chatId, firstName, funnel.temp, funnel.block);
+      return;
+    }
 
-      if (startParam === "miniapp_partner") {
-        await handleRegister(chatId, chatId, undefined);
-        return;
-      }
-      if (startParam === "miniapp_calculator") {
-        await handleDiscussProject(chatId);
-        return;
-      }
-      if (startParam === "miniapp_creators") {
-        await handleCreators(chatId);
-        return;
-      }
-      // miniapp_start, miniapp_contact, miniapp_launch → full warm-up
-    } else if (!startParam.startsWith("ref_")) {
+    if (!startParam.startsWith("ref_")) {
       await handleEventEntry(chatId, firstName, startParam);
       return;
     }
@@ -400,12 +508,14 @@ async function handleStart(chatId: number, firstName: string, startParam?: strin
           [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
           [{ text: "🤝 Обсудить проект", callback_data: "discuss" }],
           [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
+          [{ text: "🤝 Стать партнёром", callback_data: "register" }],
           [{ text: "📱 Мини-приложение", url: "https://petrfirstov.lovable.app/mini-app" }],
         ],
       },
     },
   );
 }
+
 
 // Компактное главное меню (возврат из разделов)
 async function handleMainMenu(chatId: number) {
