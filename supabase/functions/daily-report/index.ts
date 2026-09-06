@@ -55,7 +55,38 @@ Deno.serve(async (req) => {
       .map(([action, count]) => `  • ${action}: ${count}`)
       .join("\n");
 
+    // Funnel temperature breakdown (новые за сутки)
+    const { data: funnelRows } = await supabase
+      .from("bot_users")
+      .select("funnel_temp, entry_block")
+      .gte("created_at", since);
+
+    const TEMP_LABELS: Record<string, string> = {
+      cold: "❄️ Холодные",
+      warm: "🌤 Тёплые",
+      hot: "🔥 Горячие",
+      club: "🛠 В клуб",
+      partner: "🤝 Партнёрство",
+    };
+    const tempCounts: Record<string, number> = {};
+    const blockCounts: Record<string, number> = {};
+    funnelRows?.forEach((u: any) => {
+      const t = u.funnel_temp || "organic";
+      tempCounts[t] = (tempCounts[t] || 0) + 1;
+      if (u.entry_block) blockCounts[u.entry_block] = (blockCounts[u.entry_block] || 0) + 1;
+    });
+    const tempList = Object.entries(tempCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([t, c]) => `  ${TEMP_LABELS[t] || "🌐 Без метки"}: <b>${c}</b>`)
+      .join("\n");
+    const blockList = Object.entries(blockCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([b, c]) => `  • ${b}: ${c}`)
+      .join("\n");
+
     // New leads details
+
     const { data: recentLeads } = await supabase
       .from("leads")
       .select("name, telegram, ref_code, status")
