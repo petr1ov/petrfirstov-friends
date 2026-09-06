@@ -1695,7 +1695,7 @@ Deno.serve(async (req) => {
 
       const data = cb.data;
 
-      if (data === "start") {
+      if (data === "start" || data === "main_menu") {
         await handleMainMenu(chatId);
       } else if (data === "creators") {
         await handleCreators(chatId);
