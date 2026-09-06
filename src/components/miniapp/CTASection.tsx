@@ -52,7 +52,7 @@ const CTASection = () => (
           <p className="font-display text-lg font-semibold mb-5">Давай создадим что-нибудь.</p>
 
           <a
-            href="https://t.me/PetrFirstovBot?start=miniapp_start"
+            href="https://t.me/PetrFirstovBot?start=warm_start"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 min-h-12 px-8 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm shadow-xl shadow-miniapp-purple/40 hover:shadow-miniapp-purple/60 hover:scale-[1.02] active:scale-[0.98] transition-all focus-ring"
@@ -62,7 +62,7 @@ const CTASection = () => (
 
           <p className="text-xs text-miniapp-foreground/60 mt-4">
             или напишите{" "}
-            <a href="https://t.me/PetrFirstovBot?start=miniapp_start" className="text-miniapp-purple hover:underline focus-ring rounded">
+            <a href="https://t.me/PetrFirstovBot?start=warm_start" className="text-miniapp-purple hover:underline focus-ring rounded">
               @PetrFirstovBot
             </a>
           </p>

@@ -32,7 +32,7 @@ const TwoPathsSection = () => {
               Приходишь в «Созидатели», подключаешь своего AI-агента и постепенно учишься создавать свои проекты.
             </p>
             <a
-              href="https://t.me/PetrFirstovBot?start=miniapp_creators"
+              href="https://t.me/PetrFirstovBot?start=club_creators"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm shadow-lg shadow-miniapp-purple/30 hover:scale-[1.02] transition-transform focus-ring"

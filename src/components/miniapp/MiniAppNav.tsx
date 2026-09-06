@@ -17,7 +17,7 @@ const MiniAppNav = () => {
           </span>
         </a>
         <a
-          href="https://t.me/PetrFirstovBot?start=miniapp_contact"
+          href="https://t.me/PetrFirstovBot?start=hot_contact"
           target="_blank"
           rel="noopener noreferrer"
           className="min-h-9 inline-flex items-center text-xs font-medium px-3.5 py-2 rounded-full bg-miniapp-purple/15 text-miniapp-purple border border-miniapp-purple/30 hover:bg-miniapp-purple/25 transition-colors focus-ring"
