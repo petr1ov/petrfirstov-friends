@@ -65,7 +65,9 @@ export type Database = {
       bot_users: {
         Row: {
           created_at: string
+          entry_block: string | null
           first_name: string | null
+          funnel_temp: string | null
           goal: string | null
           id: string
           last_active_at: string
@@ -77,7 +79,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          entry_block?: string | null
           first_name?: string | null
+          funnel_temp?: string | null
           goal?: string | null
           id?: string
           last_active_at?: string
@@ -89,7 +93,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          entry_block?: string | null
           first_name?: string | null
+          funnel_temp?: string | null
           goal?: string | null
           id?: string
           last_active_at?: string
