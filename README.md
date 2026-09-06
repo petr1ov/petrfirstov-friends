@@ -1,73 +1,167 @@
-# Welcome to your Lovable project
+# @PetrFirstovBot
 
-## Project info
+Telegram-бот партнёрской программы
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Бот должен позволять пользователям:
+• регистрироваться как партнёры
+• получать персональную реферальную ссылку
+• приводить клиентов
+• отслеживать статистику
+• получать информацию о вознаграждениях
+Бот будет использоваться для лидогенерации для сайта:
+https://petrfirstov.ru
+1. Общая логика
+Пользователь заходит в Telegram-бот.
+Нажимает Стать партнёром.
+Регистрируется.
+Получает уникальную партнёрскую ссылку.
+Делится ссылкой.
+Если клиент приходит по ссылке — система фиксирует лид.
+В боте отображается статистика.
+2. Стартовый экран бота
+После команды /start бот показывает:
+Заголовок:
+Партнёрская программа Петра Фирстова
+Описание:
+Зарабатывайте на рекомендациях разработки:
+• Telegram-ботов
+• сайтов
+• AI-ассистентов
+• MVP стартапов
+Вознаграждение:
+10–20% с каждого проекта.
+Кнопки:
+Стать партнёром
+Как это работает
+Материалы
+Моя статистика
+3. Регистрация партнёра
+После нажатия Стать партнёром бот задаёт вопросы:
+1️⃣ Имя
+2️⃣ Telegram username
+3️⃣ Как вы планируете приводить клиентов:
+варианты кнопок:
+• знакомые
+• Telegram-канал
+• агентство
+• маркетинг / реклама
+• другое
+После регистрации:
+создаётся partner_id
+и реферальный код
+пример:
+ref_1045 
+4. Персональная партнёрская ссылка
+Бот отправляет:
+Ваша партнёрская ссылка:
+https://firstov.ai/?ref=ref_1045 
+или
+https://t.me/firstov_partner_bot?start=ref_1045 
+Кнопки:
+Скопировать ссылку
+Открыть сайт
+Отправить другу
+5. Отслеживание лидов
+Когда человек приходит на сайт по ссылке:
+?ref=ref_1045 
+система должна:
+сохранить ref_code
+записать визит
+если пользователь оставил заявку — записать лид
+6. Статистика партнёра
+Раздел Моя статистика показывает:
+Переходы по ссылке
+Количество лидов
+Количество клиентов
+Общий доход
+Пример:
+Переходы: 42
+Лиды: 7
+Клиенты: 2
+Доход: 20 000 ₽
+7. Раздел "Материалы"
+Бот должен выдавать готовые тексты для привлечения клиентов.
+Кнопки:
+Описание услуг
+Кейсы
+Текст для рекомендации
+Ссылка на сайт
+8. Кейсы (пример)
+Telegram-бот показывает:
+Кейс 1
+Агрегатор мероприятий "Город+"
+Что сделано:
+Telegram-бот
+сайт
+админ-панель
+система аналитики
+Стоимость проекта:
+≈ 80 000 ₽
+Кейс 2
+AI-наставник в Telegram
+Что сделано:
+ИИ-ассистент
+личный кабинет
+геймификация
+Стоимость:
+≈ 120 000 ₽
+9. Админ-панель
+Нужна простая админка.
+Админ должен видеть:
+список партнёров
+реферальные ссылки
+клики
+лиды
+клиентов
+выплаты
+10. Структура базы данных
+Таблица partners
+id name telegram_id username ref_code traffic_source created_at 
+Таблица clicks
+id ref_code timestamp ip 
+Таблица leads
+id ref_code name telegram contact status created_at 
+Таблица payouts
+id partner_id amount status created_at 
+11. Уведомления
+Когда появляется новый лид:
+бот отправляет уведомление админу (t.me/petrfirstov):
+Новый лид
+Источник: ref_1045
+Имя: Иван
+Контакт: @ivan
+12. Стек
+Предпочтительный стек:
+Telegram Bot API
+Node.js / Python
+PostgreSQL
+Webhook
+13. UX требования
+Интерфейс должен быть:
+простым
+минималистичным
+понятным
+Использовать кнопки Telegram.
 
-## How can I edit this code?
+This project was built with [Lovable](https://lovable.dev).
 
-There are several ways of editing your application.
+**Live app**: https://petrfirstov.lovable.app
 
-**Use Lovable**
+## Build with Lovable
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f6375b1a-2635-43c0-91e1-42df9d942106).
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
-**Use your preferred IDE**
+## Development
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
