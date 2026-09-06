@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { HelpCircle } from "lucide-react";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const questions = [
   "Умеешь ли ты поставить ему задачу?",
@@ -45,6 +46,8 @@ const DifferenceSection = () => (
       </ul>
 
       <p className="font-display text-center text-base sm:text-lg font-semibold">Вот этому мы и учимся.</p>
+
+      <BotFunnelCTA temp="club" block="difference" label="Учиться этому в «Созидателях 2.0»" />
     </div>
   </section>
 );

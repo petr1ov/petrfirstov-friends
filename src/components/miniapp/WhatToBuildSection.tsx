@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Boxes, Workflow, Bot, Sparkles, LayoutDashboard } from "lucide-react";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const groups = [
   { icon: Boxes, title: "Продукты", desc: "Приложения, сервисы, Telegram Mini Apps, сайты." },
@@ -41,6 +42,8 @@ const WhatToBuildSection = () => (
           </motion.li>
         ))}
       </ul>
+
+      <BotFunnelCTA temp="warm" block="build" label="Подобрать, что создать мне" />
     </div>
   </section>
 );

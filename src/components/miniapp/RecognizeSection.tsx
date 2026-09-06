@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const ideas = ["Новый сервис", "Приложение", "Бот", "Сайт", "Автоматизация", "Новый продукт"];
 const blockers = [
@@ -60,6 +61,8 @@ const RecognizeSection = () => (
           <span className="text-miniapp-neon">А научиться создавать самому — вместе с AI.</span>
         </p>
       </div>
+
+      <BotFunnelCTA temp="cold" block="recognize" label="Хочу попробовать по-другому" hint="AI-напарник разберёт вашу идею бесплатно" />
     </div>
   </section>
 );

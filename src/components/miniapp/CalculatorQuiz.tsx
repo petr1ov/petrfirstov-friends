@@ -180,7 +180,7 @@ const CalculatorQuiz = () => {
 
                 <div className="space-y-2">
                   <a
-                    href="https://t.me/PetrFirstovBot?start=miniapp_calculator"
+                    href="https://t.me/PetrFirstovBot?start=hot_calculator"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full min-h-12 leading-[3rem] rounded-xl bg-gradient-to-r from-miniapp-purple to-miniapp-blue text-white font-semibold text-sm text-center shadow-lg shadow-miniapp-purple/30 hover:shadow-miniapp-purple/50 transition-all focus-ring"

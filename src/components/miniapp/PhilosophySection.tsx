@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const pairs = [
   { ai: "AI может написать код.", you: "Но идею создаёшь ты." },
@@ -47,6 +48,8 @@ const PhilosophySection = () => (
         <p className="text-sm text-miniapp-foreground/70">Мы не отдаём AI управление своей жизнью и бизнесом.</p>
         <p className="font-display text-base sm:text-lg font-semibold">Мы даём себе нового сильного партнёра.</p>
       </div>
+
+      <BotFunnelCTA temp="cold" block="philosophy" label="Попробовать AI как партнёра" />
     </div>
   </section>
 );

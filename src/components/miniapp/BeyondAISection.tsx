@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const BeyondAISection = () => (
   <section className="py-16 px-4" id="beyond-ai" aria-labelledby="beyond-title">
@@ -43,6 +44,8 @@ const BeyondAISection = () => (
         Поэтому я не хочу учить людей просто пользоваться нейросетями.{" "}
         <span className="text-miniapp-foreground font-medium">Я хочу научить их создавать.</span>
       </p>
+
+      <BotFunnelCTA temp="warm" block="beyond" label="Хочу научиться создавать" />
     </div>
   </section>
 );

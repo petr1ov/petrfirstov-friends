@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const items = [
   { emoji: "🤖", title: "Персональный AI-агент", desc: "Твой AI-партнёр, который постепенно погружается в твой бизнес и становится частью твоей работы." },
@@ -45,6 +46,8 @@ const CreatorsSection = () => (
           </motion.li>
         ))}
       </ul>
+
+      <BotFunnelCTA temp="club" block="creators" label="Вступить в сообщество" hint="Первый прототип — уже на первой неделе" />
     </div>
   </section>
 );

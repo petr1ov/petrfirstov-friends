@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const steps = [
   {
@@ -93,6 +94,8 @@ const ProcessSection = () => (
           </motion.li>
         ))}
       </ol>
+
+      <BotFunnelCTA temp="warm" block="process" label="Пройти шаг 1 прямо сейчас" />
     </div>
   </section>
 );
