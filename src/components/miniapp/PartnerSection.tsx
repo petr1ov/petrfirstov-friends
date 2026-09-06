@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Users, TrendingUp, Gift } from "lucide-react";
+import { botLink } from "@/lib/botLink";
 
 const PartnerSection = () => (
   <section className="py-16 px-4" id="partner" aria-labelledby="partner-title">
