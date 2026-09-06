@@ -4,6 +4,7 @@ import { Star, ExternalLink, Rocket, Calculator, ArrowRight, CheckCircle2, Layer
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import CaseLeadDialog, { LeadMode } from "./CaseLeadDialog";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 type Case = {
   id: string;
