@@ -151,7 +151,16 @@ const ProductsCasesSection = () => {
           caseTitle={leadCase?.title}
           caseBudget={leadCase ? formatBudget(leadCase.budget, leadCase.price) : null}
         />
+
+        <BotFunnelCTA
+          temp="hot"
+          block="cases"
+          label="Хочу такой же проект"
+          hint="Назовите задачу — сразу получите вилку цены и срок"
+          variant="solid"
+        />
       </div>
+
     </section>
   );
 };
