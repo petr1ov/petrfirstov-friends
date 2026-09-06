@@ -1,0 +1,6 @@
+{
+  "name": "Telegram Web App Redesign",
+  "description": "Modern UI/UX redesign and interface for Telegram bot and web application.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
