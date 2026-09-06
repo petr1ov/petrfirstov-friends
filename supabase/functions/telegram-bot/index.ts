@@ -413,6 +413,21 @@ async function handleFunnelEntry(chatId: number, firstName: string, temp: Funnel
 
   const from = BLOCK_TITLES[block] ? ` из блока ${BLOCK_TITLES[block]}` : "";
 
+  const tempLabel: Record<FunnelTemp, string> = {
+    cold: "❄️ холодный",
+    warm: "🌤 тёплый",
+    hot: "🔥 горячий",
+    club: "🛠 в клуб",
+    partner: "🤝 партнёрство",
+  };
+  if (temp === "hot" || temp === "club" || temp === "partner") {
+    await sendMessage(
+      ADMIN_CHAT_ID,
+      `🆕 <b>Новый заход с сайта</b>\n\nИмя: ${firstName}\nID: <code>${chatId}</code>\nТемпература: ${tempLabel[temp]}\nБлок: ${BLOCK_TITLES[block] || block}`,
+    );
+  }
+
+
   if (temp === "cold") {
     await sendMessage(
       chatId,
