@@ -296,7 +296,7 @@ async function getAIResponse(telegramId: number, userMessage: string): Promise<s
 • Мини-приложение / сервис — от 30 000 ₽
 
 Сайт: https://petrfirstov.ru
-${nicheContext}${servicesContext}${goalContext}
+${nicheContext}${servicesContext}${goalContext}${funnelContext}
 
 ВАЖНО: Форматируй ответ в HTML для Telegram. Используй <b>жирный</b> и <i>курсив</i>. НЕ используй Markdown (**, __, *).
 
