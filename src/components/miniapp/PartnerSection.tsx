@@ -19,35 +19,36 @@ const PartnerSection = () => (
         <div className="relative">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-5 h-5 text-miniapp-purple" aria-hidden="true" />
-            <h2 id="partner-title" className="font-display text-2xl sm:text-3xl font-bold">Партнёрская программа</h2>
+            <h2 id="partner-title" className="font-display text-2xl sm:text-3xl font-bold">Партнёрство и амбассадорство</h2>
           </div>
 
           <p className="font-display text-3xl sm:text-4xl font-bold bg-gradient-to-r from-miniapp-purple via-miniapp-blue to-miniapp-neon bg-clip-text text-transparent mb-2">
             10–20% с каждого проекта
           </p>
           <p className="text-sm sm:text-base text-miniapp-foreground/70 mb-6">
-            Просто рекомендуйте — и зарабатывайте на каждом привлечённом клиенте
+            Рекомендуйте — и зарабатывайте. Амбассадорам — приоритетная поддержка и готовые материалы для контента.
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="p-4 rounded-xl glass-card">
               <Users className="w-5 h-5 text-miniapp-purple mb-2" aria-hidden="true" />
-              <p className="text-xs text-miniapp-foreground/75">Поделитесь ссылкой</p>
+              <p className="text-xs text-miniapp-foreground/75">Личная ссылка сразу в боте</p>
             </div>
             <div className="p-4 rounded-xl glass-card">
               <TrendingUp className="w-5 h-5 text-miniapp-neon mb-2" aria-hidden="true" />
-              <p className="text-xs text-miniapp-foreground/75">Получайте доход</p>
+              <p className="text-xs text-miniapp-foreground/75">Выплата с каждого проекта</p>
             </div>
           </div>
 
           <a
-            href="https://t.me/PetrFirstovBot?start=miniapp_partner"
+            href={botLink("partner", "ambassador")}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full min-h-12 leading-[3rem] rounded-xl bg-white/5 border border-miniapp-purple/30 text-center text-sm font-semibold text-miniapp-purple hover:bg-miniapp-purple/10 transition-colors focus-ring"
           >
-            Стать партнёром →
+            Получить партнёрскую ссылку →
           </a>
+
         </div>
       </motion.div>
     </div>
