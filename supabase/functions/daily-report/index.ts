@@ -112,6 +112,11 @@ ${dateStr}
   Всего: <b>${totalLeads.count || 0}</b>
 ${leadsDetails !== "  нет" ? `\n  Последние:\n${leadsDetails}` : ""}
 
+🌡 <b>Воронка (новые за сутки)</b>
+${tempList || "  нет"}
+${blockList ? `\n  Блоки сайта:\n${blockList}` : ""}
+
+
 🤝 <b>Партнёры</b>
   Новых за сутки: <b>${newPartners.count || 0}</b>
 
