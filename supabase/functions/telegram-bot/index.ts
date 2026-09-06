@@ -251,13 +251,30 @@ async function getAIResponse(telegramId: number, userMessage: string): Promise<s
 
   const { data: botUser } = await supabase
     .from("bot_users")
-    .select("niche, services, goal")
+    .select("niche, services, goal, funnel_temp, entry_block")
     .eq("telegram_id", telegramId)
     .single();
 
   const nicheContext = botUser?.niche ? `\nНиша пользователя: ${botUser.niche}` : "";
   const servicesContext = botUser?.services ? `\nУслуги пользователя: ${botUser.services}` : "";
   const goalContext = botUser?.goal ? `\nЦель пользователя: ${botUser.goal}` : "";
+
+  const tempStrategy: Record<string, string> = {
+    cold:
+      "Пользователь ХОЛОДНЫЙ: только знакомится. НЕ продавай, не называй цены первым. Задавай вопросы про его идею, давай пользу, покажи, что создать реально. Максимум — мягко предложи разобрать идею.",
+    warm:
+      "Пользователь ТЁПЛЫЙ: понимает зачем, хочет понять как. Объясняй шаги, приводи примеры похожих проектов, дай мини-разбор идеи. В конце — выбор: сообщество или обсудить проект с Петром.",
+    hot:
+      "Пользователь ГОРЯЧИЙ: хочет результат. Без философии. Уточняй задачу (что / зачем / срок), сразу давай вилку цены и срок, веди к заявке и разговору с Петром.",
+    club:
+      "Пользователь идёт в сообщество «Созидатели 2.0». Говори про самостоятельное создание, AI-наставника, шаблоны, первую неделю. Не переключай его на заказ под ключ, если он сам не попросит.",
+    partner:
+      "Пользователь интересуется партнёрством/амбассадорством. Объясняй, как получить ссылку, за что платят, какие проекты продавать проще всего.",
+  };
+  const funnelContext = botUser?.funnel_temp
+    ? `\n\nВОРОНКА ВХОДА: ${botUser.funnel_temp}${botUser.entry_block ? ` (блок сайта: ${botUser.entry_block})` : ""}\n${tempStrategy[botUser.funnel_temp] || ""}`
+    : "";
+
 
   const systemPrompt = `Ты — AI-напарник Петра Фирстова, создателя цифровых продуктов с AI.
 
