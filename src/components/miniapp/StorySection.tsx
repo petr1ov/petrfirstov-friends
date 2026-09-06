@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const StorySection = () => (
   <section className="py-16 px-4" id="story" aria-labelledby="story-title">
@@ -38,6 +39,8 @@ const StorySection = () => (
         <p>Сегодня я создаю реальные продукты и автоматизации с помощью AI.</p>
         <p className="text-miniapp-foreground">И теперь хочу передать этот опыт другим предпринимателям.</p>
       </div>
+
+      <BotFunnelCTA temp="cold" block="story" label="Расскажу, что хочу создать" hint="Напишите одной фразой — дальше подскажет AI" />
     </div>
   </section>
 );

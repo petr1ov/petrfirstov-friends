@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Code2, LineChart, Megaphone, Bot, PenLine, Search } from "lucide-react";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const roles = [
   { icon: Code2, label: "программистом" },
@@ -50,6 +51,8 @@ const OfferSection = () => (
       <p className="font-display text-center text-base sm:text-lg font-semibold text-balance">
         А ты остаёшься <span className="text-miniapp-neon">автором и руководителем</span> проекта.
       </p>
+
+      <BotFunnelCTA temp="warm" block="offer" label="Проверить это на своей идее" hint="Мини-разбор в боте, бесплатно" />
     </div>
   </section>
 );

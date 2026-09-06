@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotFunnelCTA from "./BotFunnelCTA";
 
 const phrases = [
   "«Я вообще не понимаю, как это сделать»",
@@ -50,6 +51,8 @@ const TransformationSection = () => (
       <p className="text-sm text-miniapp-foreground/60 text-center mt-8 text-balance">
         И вот этот переход для меня — самое интересное.
       </p>
+
+      <BotFunnelCTA temp="cold" block="transformation" label="Хочу пройти этот переход" />
     </div>
   </section>
 );
