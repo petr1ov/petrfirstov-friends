@@ -13,6 +13,7 @@ import TwoPathsSection from "@/components/miniapp/TwoPathsSection";
 import ProductsCasesSection from "@/components/miniapp/ProductsCasesSection";
 import AboutSection from "@/components/miniapp/AboutSection";
 import CalculatorQuiz from "@/components/miniapp/CalculatorQuiz";
+import PartnerSection from "@/components/miniapp/PartnerSection";
 import CTASection from "@/components/miniapp/CTASection";
 import MiniAppNav from "@/components/miniapp/MiniAppNav";
 
@@ -42,6 +43,7 @@ const MiniApp = () => {
         <ProductsCasesSection />
         <AboutSection />
         <CalculatorQuiz />
+        <PartnerSection />
         <CTASection />
       </main>
     </div>
