@@ -911,29 +911,67 @@ async function handlePartnerScenario(chatId: number, firstName: string) {
 async function handleManifesto(chatId: number) {
   await sendMessage(
     chatId,
-    `📜 <b>Манифест создателей</b>
+    `📜 <b>Манифест созидателей</b>
 
 1. Идея без воплощения — просто мысль. Ценность появляется в момент, когда продукт работает.
 
-2. Создавать важнее, чем заказывать. Заказ даёт продукт. Создание даёт навык, который остаётся с тобой.
+2. Создавать важнее, чем заказывать. Заказ даёт продукт. Создание даёт навык, который остаётся с вами.
 
-3. AI — напарник, а не замена. Он ускоряет руки, но решение и вкус — твои.
+3. AI — напарник, а не замена. Он ускоряет руки, но решение и вкус — ваши.
 
 4. Лучше рабочий прототип за неделю, чем идеальный план за полгода.
 
-5. Мы делимся находками. То, что один раз собрал и проверил один — экономит месяцы всем остальным.
+5. Мы делимся находками: то, что один раз собрал и проверил один — экономит месяцы всем.
 
 6. Мы создаём то, чем сами пользуемся. Никакой абстрактной учёбы.
 
-7. Начать можно с любой точки. Без диплома, без команды, без бюджета — с одной задачи, которая болит.
+7. Начать можно с любой точки: без диплома, без команды, без бюджета — с одной задачи, которая болит.
+
+8. Ошибка — это данные, а не приговор. Сломалось — значит, поняли систему глубже.
+
+9. Мы строим свой цифровой капитал: базы знаний, агенты и Skills остаются с вами.
+
+10. Скорость важнее идеальности, но не важнее честности перед клиентом.
+
+11. Сильные растут вместе: клуб — это среда, где чужой результат ускоряет ваш.
 
 Если это про вас — вам к нам 👇`,
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+          [{ text: "🛠 Войти в клуб", callback_data: "tariffs" }],
           [{ text: "🤖 Разобрать мою идею с AI", callback_data: "try_ai" }],
-          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
+          [{ text: "📊 Кейсы", callback_data: "cases" }],
+          [BACK_MENU],
+        ],
+      },
+    },
+  );
+}
+
+// --- Вход в клуб созидателей ---
+
+async function handleClubEntry(chatId: number, firstName: string) {
+  await sendMessage(
+    chatId,
+    `🛠 ${firstName}, добро пожаловать в «Созидатели 2.0».
+
+Это клуб, где предприниматели собирают свои продукты с AI сами — и делятся находками.
+
+<b>Три уровня участия:</b>
+1️⃣ <b>База</b> — 1 000 ₽/мес: закрытый чат + библиотека готовых решений
+2️⃣ <b>AI-Агент</b> — 5 000 ₽ разово: всё из «Базы» + личный AI-агент под вас (🔥 хит)
+3️⃣ <b>AI-Партнёр</b> — 10 000 ₽/мес: всё выше + поток реальных заказов клуба
+
+Первый прототип — уже на первой неделе.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "1️⃣ База — 1 000 ₽/мес", callback_data: "tariff_base" }],
+          [{ text: "2️⃣ AI-агент — 5 000 ₽", callback_data: "tariff_agent" }],
+          [{ text: "3️⃣ AI-партнёр — 10 000 ₽/мес", callback_data: "tariff_partner" }],
+          [{ text: "📜 Манифест", callback_data: "manifesto" }],
+          [{ text: "🤖 Разобрать мою идею с AI", callback_data: "try_ai" }],
           [BACK_MENU],
         ],
       },
@@ -943,28 +981,41 @@ async function handleManifesto(chatId: number) {
 
 // --- Приветствие + 3 пути ---
 
-async function handleThreePaths(chatId: number, firstName: string) {
+const ENTRY_INTRO: Record<string, string> = {
+  hero: "Вы пришли с главного экрана — давайте попробуем вместе.",
+  recognize: "Вы узнали себя в блоке «Узнаёшь себя?». Значит, пора попробовать по-другому.",
+  story: "Вы прочли мою историю. Расскажите, что хотите создать вы.",
+  offer: "Проверим мой подход прямо на вашей идее.",
+  process: "Пройдём шаг 1 прямо сейчас: опишите идею одной фразой.",
+  diff: "Главное отличие — вы учитесь создавать сами, а не просто получаете продукт.",
+  build: "Подберём, что именно вам стоит создать первым.",
+  header: "Вы зашли из шапки сайта — покажу главное.",
+  start: "Начнём с того, что вы давно хотите создать.",
+};
+
+async function handleThreePaths(chatId: number, firstName: string, block?: string) {
+  const intro = block && ENTRY_INTRO[block] ? `${ENTRY_INTRO[block]}\n\n` : "";
   await sendMessage(
     chatId,
     `Привет, ${firstName} 👋
 
-Я — Пётр Фирстов. Создаю цифровые продукты с AI и учу создавать самому.
+${intro}Я — Пётр Фирстов. Создаю цифровые продукты с AI и учу создавать самому.
 
 <b>Выберите, что вам ближе:</b>
 
-📋 <b>Тарифы</b> — что и за сколько можно собрать под ключ
+🛠 <b>Клуб «Созидатели 2.0»</b> — создавать самому: от 1 000 ₽/мес
+🧮 <b>Проект под ключ</b> — посчитаем бюджет и срок
 🤝 <b>Партнёрство</b> — приводить клиентов и получать 10–20% с оплат
-🎯 <b>Моя задача</b> — расскажете свою ситуацию, разберём и посчитаем
 
 Можно просто написать текстом или голосом — я отвечу.`,
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
-          [{ text: "🤝 Партнёрство", callback_data: "tariff_partner" }],
-          [{ text: "🎯 Рассказать свою задачу", callback_data: "quick_contact" }],
+          [{ text: "🛠 Хочу создавать сам", callback_data: "tariffs" }],
+          [{ text: "🧮 Рассчитать проект под ключ", callback_data: "calculator" }],
+          [{ text: "🤝 Партнёрство", callback_data: "register" }],
           [{ text: "📊 Кейсы", callback_data: "cases" }],
-          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+          [{ text: "📜 Манифест", callback_data: "manifesto" }],
         ],
       },
     },
@@ -984,15 +1035,15 @@ async function handleScenarioEntry(chatId: number, firstName: string, param: str
       .eq("telegram_id", chatId);
   };
 
-  // Тарифы
+  // Тарифы клуба
   if (p === "tariff_base" || p === "tariff_agent" || p === "tariff_partner") {
     const key = p.replace("tariff_", "");
-    await remember(key === "partner" ? "partner" : "hot", `tariff_${key}`);
+    await remember("club", `tariff_${key}`);
     await handleTariff(chatId, key);
     return true;
   }
-  if (p === "ask_tariffs" || p === "tariffs") {
-    await remember("hot", "tariffs");
+  if (p === "ask_tariffs" || p === "tariffs" || p === "nav_tariffs") {
+    await remember("club", "tariffs");
     await handleTariffsAll(chatId);
     return true;
   }
@@ -1002,6 +1053,11 @@ async function handleScenarioEntry(chatId: number, firstName: string, param: str
     const caseId = p.replace("hot_case_", "");
     await remember("hot", `case_${caseId}`);
     await handleCaseScenario(chatId, caseId);
+    return true;
+  }
+  if (p === "hot_cases" || p === "cases") {
+    await remember(p === "hot_cases" ? "hot" : "warm", "cases");
+    await handleCases(chatId);
     return true;
   }
 
@@ -1019,7 +1075,7 @@ async function handleScenarioEntry(chatId: number, firstName: string, param: str
     return true;
   }
 
-  // Партнёрство
+  // Партнёрство / амбассадорство
   if (p === "partner" || p === "partner_ambassador") {
     await remember("partner", "ambassador");
     await handlePartnerScenario(chatId, firstName);
@@ -1033,10 +1089,18 @@ async function handleScenarioEntry(chatId: number, firstName: string, param: str
     return true;
   }
 
-  // Клуб / общее тёплое / кейсы — приветствие и три пути
-  if (p === "club_creators" || p === "cases" || p.startsWith("warm_")) {
-    await remember(p === "club_creators" ? "club" : "warm", p.replace("warm_", "") || "start");
-    await handleThreePaths(chatId, firstName);
+  // Клуб созидателей
+  if (p === "club_creators" || p === "creators") {
+    await remember("club", "creators");
+    await handleClubEntry(chatId, firstName);
+    return true;
+  }
+
+  // Общие входы с сайта: warm_* / cold_* / nav_header
+  if (p === "nav_header" || p.startsWith("warm_") || p.startsWith("cold_")) {
+    const block = p === "nav_header" ? "header" : p.replace(/^(warm|cold)_/, "") || "start";
+    await remember(p.startsWith("cold_") ? "cold" : "warm", block);
+    await handleThreePaths(chatId, firstName, block);
     return true;
   }
 
