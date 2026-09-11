@@ -531,10 +531,12 @@ async function handleMainMenu(chatId: number) {
     {
       reply_markup: {
         inline_keyboard: [
+          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
           [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
           [{ text: "🤝 Обсудить проект", callback_data: "discuss" }],
           [{ text: "🤖 Попробовать AI", callback_data: "try_ai" }],
           [{ text: "📊 Кейсы", callback_data: "cases" }],
+          [{ text: "📜 Манифест", callback_data: "manifesto" }],
           [{ text: "📊 Мой проект", callback_data: "client_project" }],
           [{ text: "🚀 Стать партнёром", callback_data: "register" }],
         ],
