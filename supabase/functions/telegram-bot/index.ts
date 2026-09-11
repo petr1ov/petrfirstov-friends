@@ -2122,6 +2122,12 @@ Deno.serve(async (req) => {
       } else if (text === "/help") {
         await trackAction(telegramId, "command:help");
         await handleHelp(chatId, telegramId);
+      } else if (text === "/tariffs" || text === "/price") {
+        await trackAction(telegramId, "command:tariffs");
+        await handleTariffsAll(chatId);
+      } else if (text === "/manifesto") {
+        await trackAction(telegramId, "command:manifesto");
+        await handleManifesto(chatId);
       } else if (text) {
         // Check user state
         const { data: botUser } = await supabase
