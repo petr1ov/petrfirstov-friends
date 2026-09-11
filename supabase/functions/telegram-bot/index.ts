@@ -614,40 +614,395 @@ async function handleDiscussProject(chatId: number) {
   );
 }
 
-async function handleEventEntry(chatId: number, firstName: string, eventCode: string) {
-  const offer = await getEventOffer(eventCode);
+// ====== СЦЕНАРИИ С САЙТА ======
 
-  const text = `🔥 ${firstName}, ты с мероприятия?
-Забери свой бонус!
+const BACK_MENU = { text: "🔙 Главное меню", callback_data: "start" };
 
-Я делаю не просто ботов
+// --- Тарифы ---
 
-👉 а систему, которая:
-— приводит клиентов
-— отвечает за тебя
-— прогревает
-— продаёт
+const TARIFFS: Record<string, { title: string; text: string }> = {
+  base: {
+    title: "🚀 Базовый — продукт под ключ",
+    text: `🚀 <b>Базовый — продукт под ключ</b>
 
-И внутри:
+Что входит:
+• Telegram-бот с AI-ответами
+• Мини-приложение (как современный сайт)
+• CRM с клиентами и заявками
+• Аналитика действий
+• Настройка под вашу нишу
 
-• мини-приложение (как сайт)
-• CRM с клиентами
-• аналитика действий
-• рассылки
-• ИИ, который пишет персональные предложения
-• ИИ-аватар, который отвечает за тебя
+⏱ Срок: от 14 дней
+💰 Стоимость: от 30 000 ₽ (ботовизитка — от 10 000 ₽)
 
-${offer ? `\n🎯 <b>Спецпредложение:</b>\n${offer.tier} — <b>${offer.price.toLocaleString("ru-RU")} ₽</b>\nОсталось мест: <b>${offer.spotsLeft}</b>` : "\n⏳ Все спецпредложения разобраны, но вы можете получить консультацию!"}`;
+Подходит, если нужен работающий продукт, а не обучение.`,
+  },
+  agent: {
+    title: "🤖 AI-агент — умный напарник",
+    text: `🤖 <b>AI-агент — умный напарник</b>
 
-  await sendMessage(chatId, text, {
+Что входит:
+• AI-ассистент, который отвечает 24/7 вашим голосом и стилем
+• Понимает голосовые сообщения
+• Ведёт диалог и доводит человека до заявки
+• Знает ваши услуги, цены и возражения
+• Передаёт заявки в CRM и вам в Telegram
+
+💰 Стоимость: от 15 000 ₽
+🎙 Голосовой режим и сопровождение: от 20 000 ₽/мес
+
+Подходит, если нужно снять с себя переписку и не терять заявки.`,
+  },
+  partner: {
+    title: "🤝 Партнёрский — зарабатывать вместе",
+    text: `🤝 <b>Партнёрский — зарабатывать вместе</b>
+
+Как это работает:
+• Вы получаете личный промокод и ссылку
+• Каждый пришедший человек закрепляется за вами
+• Вы получаете 10–20% с каждого оплаченного проекта
+• Средний проект — 30 000–200 000 ₽
+• Амбассадорам — материалы для контента и приоритетная поддержка
+
+Оплата не только за первый проект: клиент возвращается — вы получаете снова.`,
+  },
+};
+
+async function handleTariff(chatId: number, key: string) {
+  const t = TARIFFS[key];
+  if (!t) return handleTariffsAll(chatId);
+  await sendMessage(chatId, t.text, {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "🔥 Забрать предложение", callback_data: `event_offer_${eventCode}` }],
-        [{ text: "👀 Посмотреть как это работает", callback_data: "cases" }],
-        [{ text: "💼 Кейсы", callback_data: "cases" }],
+        key === "partner"
+          ? [{ text: "🚀 Получить мою ссылку", callback_data: "register" }]
+          : [{ text: "📝 Оставить заявку", callback_data: "leave_request" }],
+        [{ text: "📋 Все тарифы", callback_data: "tariffs" }],
+        [{ text: "💬 Задать вопрос AI", callback_data: "try_ai" }],
+        [BACK_MENU],
       ],
     },
   });
+}
+
+async function handleTariffsAll(chatId: number) {
+  await sendMessage(
+    chatId,
+    `📋 <b>Три варианта работы</b>
+
+🚀 <b>Базовый</b> — продукт под ключ: бот + мини-приложение + CRM. От 30 000 ₽, срок от 14 дней.
+
+🤖 <b>AI-агент</b> — ассистент, который отвечает 24/7 вместо вас. От 15 000 ₽.
+
+🤝 <b>Партнёрский</b> — приводите клиентов и получаете 10–20% с оплат.
+
+Выберите, что разобрать подробнее 👇`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🚀 Базовый", callback_data: "tariff_base" }],
+          [{ text: "🤖 AI-агент", callback_data: "tariff_agent" }],
+          [{ text: "🤝 Партнёрский", callback_data: "tariff_partner" }],
+          [{ text: "💬 Задать вопрос AI", callback_data: "try_ai" }],
+          [BACK_MENU],
+        ],
+      },
+    },
+  );
+}
+
+// --- Кейсы: свой ответ под каждый ---
+
+const CASE_SCRIPTS: Record<string, string> = {
+  a5d8ec08: `🏆 <b>Клуб предпринимателей «ПЕРВЫЕ»</b>
+
+Что сделали: Telegram Mini App с каталогом резидентов, AI-подбором партнёров по запросу, баллами за активность и админкой для модерации и рассылок.
+
+Результат: +340% вовлечённости резидентов, 90% рутины комьюнити-менеджера — на автомате.
+💰 200 000 ₽
+
+Соберём аналог под вас: клуб, сообщество, нетворкинг-платформа. Напишите, что у вас за сообщество и сколько людей — дам вилку и срок.`,
+  f03f628e: `🧘 <b>EBD Mind — платформа женских практик</b>
+
+Что сделали: приложение-плеер медитаций с оффлайн-режимом, бот с ежедневными голосовыми настроями, генерацию персональных медитаций под состояние и подписки с оплатой.
+
+Результат: 1 800+ активных подписок за 3 месяца.
+💰 200 000 ₽
+
+Соберём аналог под вас: практики, курсы, аудио-контент по подписке. Расскажите про ваш контент — прикину объём.`,
+  "80d737ef": `📍 <b>Город+ — навигатор событий города</b>
+
+Что сделали: бот с быстрым поиском событий, мини-приложение с расписанием, фильтрами и картой, кабинет организаторов и CRM по билетам.
+
+Результат: 12 000+ просмотров событий в месяц, поиск события — 30 секунд.
+💰 150 000 ₽
+
+Соберём аналог под вас: афиша, каталог, маркетплейс услуг. Напишите вашу нишу.`,
+  "46376595": `🎭 <b>Бронирование детских шоу</b>
+
+Что сделали: пошаговый калькулятор программы с моментальным расчётом, автоматический договор и счёт в PDF, бронь артистов и уведомления менеджерам.
+
+Результат: конверсия из расчёта в заявку выросла с 14% до 38%.
+💰 150 000 ₽
+
+Соберём аналог под вас: услуги с расчётом стоимости и расписанием. Опишите, как считаете цену сейчас.`,
+  de8e5c03: `🕉 <b>Школа аштанга-йоги</b>
+
+Что сделали: мини-приложение с сеткой расписания, учёт занятий по абонементам, напоминания за 2 часа до практики и панель преподавателей.
+
+Результат: пропуски без предупреждения снизились на 70%.
+💰 100 000 ₽
+
+Соберём аналог под вас: студия, школа, секция, любые групповые занятия. Сколько у вас занятий в неделю?`,
+  b6d2e2be: `🌿 <b>Магазин аюрведических препаратов</b>
+
+Что сделали: каталог с поиском по симптомам, AI-подбор трав, заказ в 2 клика внутри Telegram, трекинг доставки СДЭК и CRM с историей покупок.
+
+Результат: средний чек вырос на 28%.
+💰 50 000 ₽
+
+Соберём аналог под вас: магазин прямо в Telegram. Сколько у вас товаров?`,
+  "6b902e53": `🏠 <b>ИИ-визитка риелтора</b>
+
+Что сделали: каталог объектов с галереей и фильтрами, AI-бот на типовые вопросы 24/7, расчёт ипотеки и передача готового лида риелтору.
+
+Результат: +45% входящих заявок с визитки в соцсетях.
+💰 30 000 ₽
+
+Соберём аналог под вас: визитка эксперта с AI-квалификацией. Чем вы занимаетесь?`,
+};
+
+async function handleCaseScenario(chatId: number, caseId: string) {
+  const text = CASE_SCRIPTS[caseId];
+  if (!text) {
+    await handleCases(chatId);
+    return;
+  }
+  await sendMessage(chatId, text, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📝 Хочу такой же проект", callback_data: "leave_request" }],
+        [{ text: "📋 Тарифы", callback_data: "tariffs" }],
+        [{ text: "📊 Другие кейсы", callback_data: "cases" }],
+        [BACK_MENU],
+      ],
+    },
+  });
+}
+
+// --- Калькулятор ---
+
+async function handleCalculatorEntry(chatId: number, firstName: string) {
+  await supabase.from("bot_users").update({ goal: "ai_chat" }).eq("telegram_id", chatId);
+  await sendMessage(
+    chatId,
+    `🧮 ${firstName}, посчитаем ваш проект.
+
+<b>Напишите одной строкой вашу нишу и задачу.</b>
+Например: «Стоматология, нужен бот для записи» или «Онлайн-школа, нужен кабинет ученика».
+
+Сразу пришлю вилку бюджета и срок. Можно голосовым.
+
+Ориентиры:
+• Ботовизитка — от 10 000 ₽, 3–5 дней
+• AI-бот — от 15 000 ₽, 5–10 дней
+• Мини-приложение / сервис — от 30 000 ₽, от 14 дней
+• Платформа с CRM и AI — от 100 000 ₽, 3–6 недель`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
+          [{ text: "📊 Кейсы", callback_data: "cases" }],
+          [BACK_MENU],
+        ],
+      },
+    },
+  );
+}
+
+// --- Быстрый контакт ---
+
+async function handleQuickContact(chatId: number, firstName: string) {
+  await supabase.from("bot_users").update({ goal: "ai_chat" }).eq("telegram_id", chatId);
+  await sendMessage(
+    chatId,
+    `👋 ${firstName}, на связи.
+
+Чтобы не тратить ваше время, ответьте тремя строками:
+1️⃣ Что у вас за бизнес?
+2️⃣ Что сейчас мешает / что хотите автоматизировать?
+3️⃣ Когда нужен результат?
+
+Отвечу вилкой по цене и предложу короткий звонок — 15 минут, без презентаций.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📞 Хочу звонок", callback_data: "leave_request" }],
+          [{ text: "👨‍💻 Написать Петру", url: "https://t.me/petrfirstov" }],
+          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
+          [BACK_MENU],
+        ],
+      },
+    },
+  );
+}
+
+// --- Партнёрка ---
+
+async function handlePartnerScenario(chatId: number, firstName: string) {
+  await sendMessage(
+    chatId,
+    `🤝 ${firstName}, рад видеть.
+
+<b>Как работает партнёрство:</b>
+• Вы получаете личный промокод и ссылку
+• Каждый пришедший по ней закрепляется за вами навсегда
+• Вы получаете 10–20% с каждого оплаченного проекта
+• Средний проект — 30 000–200 000 ₽
+• Клиент возвращается за доработками — вы получаете снова
+
+<b>Амбассадорам дополнительно:</b> готовые материалы для контента, разборы кейсов и приоритетная поддержка.
+
+Сейчас оформлю вашу ссылку 👇`,
+  );
+  await handleRegister(chatId, chatId, undefined);
+}
+
+// --- Манифест ---
+
+async function handleManifesto(chatId: number) {
+  await sendMessage(
+    chatId,
+    `📜 <b>Манифест создателей</b>
+
+1. Идея без воплощения — просто мысль. Ценность появляется в момент, когда продукт работает.
+
+2. Создавать важнее, чем заказывать. Заказ даёт продукт. Создание даёт навык, который остаётся с тобой.
+
+3. AI — напарник, а не замена. Он ускоряет руки, но решение и вкус — твои.
+
+4. Лучше рабочий прототип за неделю, чем идеальный план за полгода.
+
+5. Мы делимся находками. То, что один раз собрал и проверил один — экономит месяцы всем остальным.
+
+6. Мы создаём то, чем сами пользуемся. Никакой абстрактной учёбы.
+
+7. Начать можно с любой точки. Без диплома, без команды, без бюджета — с одной задачи, которая болит.
+
+Если это про вас — вам к нам 👇`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+          [{ text: "🤖 Разобрать мою идею с AI", callback_data: "try_ai" }],
+          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
+          [BACK_MENU],
+        ],
+      },
+    },
+  );
+}
+
+// --- Приветствие + 3 пути ---
+
+async function handleThreePaths(chatId: number, firstName: string) {
+  await sendMessage(
+    chatId,
+    `Привет, ${firstName} 👋
+
+Я — Пётр Фирстов. Создаю цифровые продукты с AI и учу создавать самому.
+
+<b>Выберите, что вам ближе:</b>
+
+📋 <b>Тарифы</b> — что и за сколько можно собрать под ключ
+🤝 <b>Партнёрство</b> — приводить клиентов и получать 10–20% с оплат
+🎯 <b>Моя задача</b> — расскажете свою ситуацию, разберём и посчитаем
+
+Можно просто написать текстом или голосом — я отвечу.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📋 Тарифы", callback_data: "tariffs" }],
+          [{ text: "🤝 Партнёрство", callback_data: "tariff_partner" }],
+          [{ text: "🎯 Рассказать свою задачу", callback_data: "quick_contact" }],
+          [{ text: "📊 Кейсы", callback_data: "cases" }],
+          [{ text: "🛠 Хочу создавать сам", callback_data: "creators" }],
+        ],
+      },
+    },
+  );
+}
+
+// --- Роутер сценариев с сайта ---
+
+async function handleScenarioEntry(chatId: number, firstName: string, param: string): Promise<boolean> {
+  const p = param.toLowerCase();
+
+  const remember = async (temp: FunnelTemp, block: string) => {
+    await trackAction(chatId, "funnel_entry", { temp, block, param: p });
+    await supabase
+      .from("bot_users")
+      .update({ source: p, funnel_temp: temp, entry_block: block })
+      .eq("telegram_id", chatId);
+  };
+
+  // Тарифы
+  if (p === "tariff_base" || p === "tariff_agent" || p === "tariff_partner") {
+    const key = p.replace("tariff_", "");
+    await remember(key === "partner" ? "partner" : "hot", `tariff_${key}`);
+    await handleTariff(chatId, key);
+    return true;
+  }
+  if (p === "ask_tariffs" || p === "tariffs") {
+    await remember("hot", "tariffs");
+    await handleTariffsAll(chatId);
+    return true;
+  }
+
+  // Кейсы (свой ответ под каждый)
+  if (p.startsWith("hot_case_")) {
+    const caseId = p.replace("hot_case_", "");
+    await remember("hot", `case_${caseId}`);
+    await handleCaseScenario(chatId, caseId);
+    return true;
+  }
+
+  // Калькулятор
+  if (p === "hot_calculator" || p.startsWith("calc_")) {
+    await remember("hot", "calculator");
+    await handleCalculatorEntry(chatId, firstName);
+    return true;
+  }
+
+  // Быстрый контакт
+  if (p === "hot_contact") {
+    await remember("hot", "contact");
+    await handleQuickContact(chatId, firstName);
+    return true;
+  }
+
+  // Партнёрство
+  if (p === "partner" || p === "partner_ambassador") {
+    await remember("partner", "ambassador");
+    await handlePartnerScenario(chatId, firstName);
+    return true;
+  }
+
+  // Манифест
+  if (p === "manifesto" || p === "manifesto_popup") {
+    await remember("cold", "manifesto");
+    await handleManifesto(chatId);
+    return true;
+  }
+
+  // Клуб / общее тёплое / кейсы — приветствие и три пути
+  if (p === "club_creators" || p === "cases" || p.startsWith("warm_")) {
+    await remember(p === "club_creators" ? "club" : "warm", p.replace("warm_", "") || "start");
+    await handleThreePaths(chatId, firstName);
+    return true;
+  }
+
+  return false;
 }
 
 async function handleCases(chatId: number) {
