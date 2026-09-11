@@ -484,17 +484,16 @@ async function handleFunnelEntry(chatId: number, firstName: string, temp: Funnel
 // ====== MAIN BOT SCENARIOS ======
 
 async function handleStart(chatId: number, firstName: string, startParam?: string) {
-  if (startParam && startParam !== "") {
+  if (startParam && startParam !== "" && !startParam.startsWith("ref_")) {
+    // 1) Точные сценарии с сайта (тарифы, кейсы, калькулятор, контакт, партнёрка, манифест)
+    const handled = await handleScenarioEntry(chatId, firstName, startParam);
+    if (handled) return;
+
+    // 2) Общая логика воронок по «температуре»
     const normalized = LEGACY_FUNNEL[startParam] || startParam;
     const funnel = parseFunnel(normalized);
-
     if (funnel) {
       await handleFunnelEntry(chatId, firstName, funnel.temp, funnel.block);
-      return;
-    }
-
-    if (!startParam.startsWith("ref_")) {
-      await handleEventEntry(chatId, firstName, startParam);
       return;
     }
   }
