@@ -2101,9 +2101,18 @@ Deno.serve(async (req) => {
           .single();
         const name = botUser?.goal?.replace("register_traffic:", "") || firstName;
         await completeRegistration(chatId, telegramId, username, name, sourceKey);
-      } else if (data.startsWith("event_offer_")) {
-        const eventCode = data.replace("event_offer_", "");
-        await handleEventOffer(chatId, telegramId, firstName, username, eventCode);
+      } else if (data === "tariffs") {
+        await handleTariffsAll(chatId);
+      } else if (data.startsWith("tariff_")) {
+        await handleTariff(chatId, data.replace("tariff_", ""));
+      } else if (data === "manifesto") {
+        await handleManifesto(chatId);
+      } else if (data === "quick_contact") {
+        await handleQuickContact(chatId, firstName);
+      } else if (data === "calculator") {
+        await handleCalculatorEntry(chatId, firstName);
+      } else if (data.startsWith("case_")) {
+        await handleCaseScenario(chatId, data.replace("case_", ""));
       } else if (data === "client_menu") {
         await sendMessage(chatId, "🏠 <b>Кабинет клиента</b>", { reply_markup: clientMenuKeyboard() });
       } else if (data === "client_project") {
