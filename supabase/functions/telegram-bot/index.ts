@@ -339,31 +339,6 @@ ${nicheContext}${servicesContext}${goalContext}${funnelContext}
   }
 }
 
-// ====== EVENT OFFER LOGIC ======
-
-async function getEventOffer(eventCode: string): Promise<{ price: number; spotsLeft: number; tier: string } | null> {
-  const { data } = await supabase.from("event_offers").select("*").eq("event_code", eventCode).single();
-
-  if (!data) return null;
-
-  const sold = data.sold_count;
-  if (sold < data.tier1_limit) {
-    return { price: data.tier1_price, spotsLeft: data.tier1_limit - sold, tier: `Первые ${data.tier1_limit} человек` };
-  } else if (sold < data.tier1_limit + data.tier2_limit) {
-    return {
-      price: data.tier2_price,
-      spotsLeft: data.tier1_limit + data.tier2_limit - sold,
-      tier: `Следующие ${data.tier2_limit}`,
-    };
-  } else if (sold < data.tier1_limit + data.tier2_limit + data.tier3_limit) {
-    return {
-      price: data.tier3_price,
-      spotsLeft: data.tier1_limit + data.tier2_limit + data.tier3_limit - sold,
-      tier: `Следующие ${data.tier3_limit}`,
-    };
-  }
-  return null;
-}
 
 // ====== FUNNEL (site → bot) ======
 
