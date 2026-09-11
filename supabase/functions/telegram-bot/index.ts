@@ -1156,59 +1156,6 @@ async function handleLeaveRequest(chatId: number, telegramId: number, firstName:
   );
 }
 
-async function handleEventOffer(
-  chatId: number,
-  telegramId: number,
-  firstName: string,
-  username: string | undefined,
-  eventCode: string,
-) {
-  const offer = await getEventOffer(eventCode);
-  if (!offer) {
-    await sendMessage(
-      chatId,
-      "⏳ К сожалению, все места по спецпредложению заняты. Но мы можем обсудить индивидуальные условия!\n\nНапишите @petrfirstov",
-    );
-    return;
-  }
-
-  const { data: currentOffer } = await supabase
-    .from("event_offers")
-    .select("sold_count")
-    .eq("event_code", eventCode)
-    .single();
-
-  await supabase
-    .from("event_offers")
-    .update({ sold_count: (currentOffer?.sold_count || 0) + 1 })
-    .eq("event_code", eventCode);
-
-  await supabase.from("leads").insert({
-    ref_code: `event_${eventCode}`,
-    name: firstName,
-    telegram: username ? `@${username}` : String(telegramId),
-    contact: username ? `@${username}` : String(telegramId),
-    status: "new",
-  });
-
-  await sendMessage(
-    chatId,
-    `🎉 <b>Отлично, ${firstName}!</b>\n\nВы забронировали место по спецпредложению!\n\n💰 Цена: <b>${offer.price.toLocaleString("ru-RU")} ₽</b>\n\nПётр свяжется с вами в ближайшее время для обсуждения деталей.\n\n📩 Или напишите сами: @petrfirstov`,
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🤖 Попробовать AI пока ждём", callback_data: "try_ai" }],
-          [{ text: "🔙 Главное меню", callback_data: "start" }],
-        ],
-      },
-    },
-  );
-
-  await sendMessage(
-    ADMIN_CHAT_ID,
-    `🔥 <b>Новая заявка с мероприятия!</b>\n\nИмя: ${firstName}\nUsername: @${username || "не указан"}\nСобытие: ${eventCode}\nЦена: ${offer.price} ₽\nУровень: ${offer.tier}`,
-  );
-}
 
 // ====== PARTNER PROGRAM ======
 
