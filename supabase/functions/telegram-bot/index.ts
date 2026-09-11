@@ -696,15 +696,19 @@ const TARIFFS: Record<string, { title: string; text: string }> = {
   },
 };
 
+const TARIFF_CTA: Record<string, string> = {
+  base: "✅ Войти в сообщество",
+  agent: "🤖 Подключить AI-агента",
+  partner: "🤝 Стать AI-партнёром",
+};
+
 async function handleTariff(chatId: number, key: string) {
   const t = TARIFFS[key];
   if (!t) return handleTariffsAll(chatId);
   await sendMessage(chatId, t.text, {
     reply_markup: {
       inline_keyboard: [
-        key === "partner"
-          ? [{ text: "🚀 Получить мою ссылку", callback_data: "register" }]
-          : [{ text: "📝 Оставить заявку", callback_data: "leave_request" }],
+        [{ text: TARIFF_CTA[key] ?? "📝 Оставить заявку", callback_data: "leave_request" }],
         [{ text: "📋 Все тарифы", callback_data: "tariffs" }],
         [{ text: "💬 Задать вопрос AI", callback_data: "try_ai" }],
         [BACK_MENU],
@@ -716,21 +720,27 @@ async function handleTariff(chatId: number, key: string) {
 async function handleTariffsAll(chatId: number) {
   await sendMessage(
     chatId,
-    `📋 <b>Три варианта работы</b>
+    `📋 <b>Три уровня участия в клубе</b>
 
-🚀 <b>Базовый</b> — продукт под ключ: бот + мини-приложение + CRM. От 30 000 ₽, срок от 14 дней.
+1️⃣ <b>БАЗА</b> — 1 000 ₽/мес
+Закрытое сообщество + библиотека готовых решений (Skills).
 
-🤖 <b>AI-агент</b> — ассистент, который отвечает 24/7 вместо вас. От 15 000 ₽.
+2️⃣ <b>AI-АГЕНТ</b> — 5 000 ₽ разово 🔥 хит
+Всё из «Базы» + личный AI-агент под ваш бизнес. Плюс токены по факту и 500 ₽/мес за сервер.
 
-🤝 <b>Партнёрский</b> — приводите клиентов и получаете 10–20% с оплат.
+3️⃣ <b>AI-ПАРТНЁР</b> — 10 000 ₽/мес
+Всё из «Базы» и «Агента» + поток реальных заказов и клиентов клуба.
+
+Нужен продукт под ключ, а не участие в клубе? Нажмите «Рассчитать проект».
 
 Выберите, что разобрать подробнее 👇`,
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "🚀 Базовый", callback_data: "tariff_base" }],
-          [{ text: "🤖 AI-агент", callback_data: "tariff_agent" }],
-          [{ text: "🤝 Партнёрский", callback_data: "tariff_partner" }],
+          [{ text: "1️⃣ База — 1 000 ₽/мес", callback_data: "tariff_base" }],
+          [{ text: "2️⃣ AI-агент — 5 000 ₽", callback_data: "tariff_agent" }],
+          [{ text: "3️⃣ AI-партнёр — 10 000 ₽/мес", callback_data: "tariff_partner" }],
+          [{ text: "🧮 Рассчитать проект под ключ", callback_data: "calculator" }],
           [{ text: "💬 Задать вопрос AI", callback_data: "try_ai" }],
           [BACK_MENU],
         ],
